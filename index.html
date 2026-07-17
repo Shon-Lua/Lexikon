@@ -11,255 +11,216 @@
       box-sizing: border-box;
     }
     body {
-      background: #0b0b0b;
-      color: #ccc;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      padding: 2rem 1rem;
+      padding: 1.5rem;
     }
     .main-container {
       width: 100%;
-      max-width: 760px;
-      height: calc(100vh - 4rem);
+      max-width: 700px;
+      height: 100%;
+      max-height: calc(100vh - 3rem);
       background: #111;
       border: 1px solid #333;
-      box-shadow: 0 0 0 1px #1a1a1a;
-      padding: 1.5rem;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      padding: 2rem;
+      gap: 2rem;
     }
-    .top-bar {
+    .top-panel {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding-bottom: 1rem;
+      gap: 1.2rem;
+      flex-wrap: wrap;
       border-bottom: 1px solid #2a2a2a;
-      flex-shrink: 0;
+      padding-bottom: 1.2rem;
     }
-    .logo-area {
+    .logo {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-    }
-    .logo-icon {
-      font-size: 1.8rem;
-      color: #fff;
-      line-height: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 2rem;
-      height: 2rem;
-      border: 1px solid #555;
-      font-weight: 300;
-    }
-    .logo-text {
       font-size: 1.8rem;
       font-weight: 700;
       letter-spacing: 0.4rem;
       color: #fff;
       text-transform: uppercase;
     }
-    .device-indicator {
+    .logo-icon {
+      font-size: 1.6rem;
+      color: #ccc;
+    }
+    .action-btns {
+      margin-left: auto;
       display: flex;
+      gap: 0.8rem;
       align-items: center;
     }
-    .dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #2a2a2a;
-      border: 1px solid #555;
-      transition: 0.2s;
-    }
-    .dot.active {
-      background: #fff;
-      border-color: #fff;
-    }
-    .connect-btn, .flash-btn {
+    .btn {
       background: transparent;
-      border: 1px solid #444;
+      border: 1px solid #555;
       color: #ccc;
-      font-size: 0.75rem;
+      font-family: inherit;
+      font-size: 0.8rem;
       font-weight: 600;
       letter-spacing: 0.1rem;
       padding: 0.5rem 1.2rem;
       cursor: pointer;
       text-transform: uppercase;
       transition: 0.2s;
-      font-family: inherit;
-      white-space: nowrap;
     }
-    .connect-btn:hover:not(:disabled) {
+    .btn:hover:not(:disabled) {
       border-color: #fff;
       color: #fff;
-      background: #222;
+      background: #1a1a1a;
     }
-    .flash-btn {
-      background: #fff;
-      color: #000;
-      border-color: #fff;
-    }
-    .flash-btn:hover:not(:disabled) {
-      background: #000;
-      color: #fff;
-    }
-    .connect-btn:disabled, .flash-btn:disabled {
+    .btn:disabled {
       opacity: 0.35;
       pointer-events: none;
     }
-    .middle-section {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      padding-top: 1.5rem;
-      overflow: hidden;
+    .flash-status {
+      font-size: 0.7rem;
+      color: #888;
+      margin-left: 0.4rem;
+      letter-spacing: 0.05rem;
+      white-space: nowrap;
     }
-    .about-text {
-      font-size: 0.85rem;
+    .about-block {
+      font-size: 0.9rem;
       line-height: 1.7;
       color: #aaa;
       background: #181818;
-      border: 1px solid #282828;
-      padding: 1rem;
-      flex-shrink: 0;
+      border: 1px solid #2a2a2a;
+      padding: 1.2rem;
+    }
+    .gallery-block {
+      flex: 1;
+      overflow-y: auto;
     }
     .gallery-grid {
-      flex: 1;
-      min-height: 0;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.8rem;
-      overflow: hidden;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 1rem;
     }
     .gallery-item {
       background: #181818;
       border: 1px solid #2a2a2a;
+      padding: 1rem 0.5rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 0.6rem;
-      min-height: 0;
     }
-    .gallery-thumb {
+    .gallery-image {
       width: 100%;
-      flex: 1;
+      aspect-ratio: 4/3;
       background: #1c1c1c;
       border: 1px solid #333;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #444;
       font-size: 1.5rem;
+      color: #555;
+      margin-bottom: 0.6rem;
     }
     .gallery-caption {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.05rem;
-      color: #777;
-      margin-top: 0.4rem;
-      text-align: center;
-    }
-    @media (max-width: 600px) {
-      .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .logo-text {
-        font-size: 1.3rem;
-        letter-spacing: 0.2rem;
-      }
+      letter-spacing: 0.08rem;
+      color: #888;
     }
   </style>
 </head>
 <body>
   <div class="main-container">
-    <div class="top-bar">
-      <div class="logo-area">
-        <span class="logo-icon">&#x25C7;</span>
-        <span class="logo-text">LEXIKON</span>
+    <div class="top-panel">
+      <div class="logo">
+        <span class="logo-icon">&#x2B21;</span> LEXIKON
       </div>
-      <div class="device-indicator">
-        <span class="dot" id="statusDot"></span>
+      <div class="action-btns">
+        <button class="btn" id="connectBtn">Подключить</button>
+        <button class="btn" id="flashBtn" disabled>Загрузить</button>
+        <span class="flash-status" id="flashStatus"></span>
       </div>
-      <button class="connect-btn" id="connectBtn">Подключить</button>
-      <button class="flash-btn" id="flashBtn" disabled>Загрузить</button>
     </div>
-    <div class="middle-section">
-      <div class="about-text">
-        Lexikon OS — компактная операционная система для микроконтроллеров ESP32. Поддерживает вытесняющую многозадачность, файловую систему LittleFS, встроенный веб-интерфейс и OTA-обновления. Ядро оптимизировано для низкого энергопотребления и стабильной работы в IoT-проектах.
-      </div>
+
+    <div class="about-block">
+      Lexikon OS — минималистичная операционная система для микроконтроллеров ESP32. Поддерживает вытесняющую многозадачность, файловую систему LittleFS, встроенный веб-интерфейс настройки и OTA-обновления. Ядро оптимизировано для низкого энергопотребления и стабильной работы в IoT-сценариях.
+    </div>
+
+    <div class="gallery-block">
       <div class="gallery-grid">
         <div class="gallery-item">
-          <div class="gallery-thumb">&#x25A0;</div>
-          <div class="gallery-caption">отладка</div>
+          <div class="gallery-image">&#x25A3;</div>
+          <div class="gallery-caption">отладочный стенд</div>
         </div>
         <div class="gallery-item">
-          <div class="gallery-thumb">&#x25B2;</div>
-          <div class="gallery-caption">плата</div>
+          <div class="gallery-image">&#x25A3;</div>
+          <div class="gallery-caption">веб-панель</div>
         </div>
         <div class="gallery-item">
-          <div class="gallery-thumb">&#x25C8;</div>
+          <div class="gallery-image">&#x25A3;</div>
           <div class="gallery-caption">схема</div>
         </div>
         <div class="gallery-item">
-          <div class="gallery-thumb">&#x25CF;</div>
-          <div class="gallery-caption">корпус</div>
+          <div class="gallery-image">&#x25A3;</div>
+          <div class="gallery-caption">датчики</div>
         </div>
       </div>
     </div>
   </div>
+
   <script>
     const connectBtn = document.getElementById('connectBtn');
     const flashBtn = document.getElementById('flashBtn');
-    const statusDot = document.getElementById('statusDot');
+    const flashStatus = document.getElementById('flashStatus');
 
     let port = null;
-    let writer = null;
     let isFlashing = false;
 
-    function updateUI() {
+    function updateButtons() {
       const connected = port !== null;
-      statusDot.classList.toggle('active', connected);
-      connectBtn.disabled = isFlashing;
+      connectBtn.textContent = connected ? 'Отключить' : 'Подключить';
       flashBtn.disabled = !connected || isFlashing;
     }
 
-    async function connectDevice() {
-      if (isFlashing) return;
+    async function toggleConnection() {
+      if (port) {
+        if (isFlashing) return;
+        try {
+          await port.close();
+        } catch (e) {}
+        port = null;
+        updateButtons();
+        flashStatus.textContent = '';
+        return;
+      }
       try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-        updateUI();
+        updateButtons();
+        flashStatus.textContent = '';
       } catch (err) {
         port = null;
-        updateUI();
+        updateButtons();
+        flashStatus.textContent = 'ошибка порта';
       }
     }
 
-    async function fetchFirmware() {
-      const response = await fetch('/firmware.bin');
-      if (!response.ok) throw new Error('file not found');
-      const buffer = await response.arrayBuffer();
-      return new Uint8Array(buffer);
-    }
-
-    async function startFlash() {
+    async function performFlash() {
       if (!port || isFlashing) return;
       isFlashing = true;
-      updateUI();
+      updateButtons();
+      flashStatus.textContent = 'прошивка...';
       try {
-        const firmware = await fetchFirmware();
-        if (writer) {
-          writer.releaseLock();
-        }
-        writer = port.writable.getWriter();
+        const response = await fetch('/firmware.bin');
+        if (!response.ok) throw new Error('файл не найден');
+        const buffer = await response.arrayBuffer();
+        const firmware = new Uint8Array(buffer);
+        const writer = port.writable.getWriter();
         const chunkSize = 1024;
         let offset = 0;
         while (offset < firmware.length) {
@@ -268,27 +229,25 @@
           offset = end;
         }
         await writer.close();
-        writer = null;
+        flashStatus.textContent = 'успешно';
       } catch (e) {
-        if (writer) {
-          await writer.close().catch(() => {});
-          writer = null;
-        }
+        flashStatus.textContent = 'ошибка';
       } finally {
         isFlashing = false;
-        updateUI();
+        updateButtons();
       }
     }
 
-    connectBtn.addEventListener('click', connectDevice);
-    flashBtn.addEventListener('click', startFlash);
+    connectBtn.addEventListener('click', toggleConnection);
+    flashBtn.addEventListener('click', performFlash);
 
     if (!('serial' in navigator)) {
       connectBtn.disabled = true;
       flashBtn.disabled = true;
+      flashStatus.textContent = 'API недоступен';
     }
 
-    updateUI();
+    updateButtons();
   </script>
 </body>
 </html>
