@@ -57,19 +57,6 @@
       font-size: 1.6rem;
       color: #ddd;
     }
-    .status-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #333;
-      border: 1px solid #555;
-      margin-left: 0.5rem;
-      transition: background 0.2s;
-    }
-    .status-dot.active {
-      background: #fff;
-      border-color: #fff;
-    }
     .action-btns {
       margin-left: auto;
       display: flex;
@@ -125,35 +112,23 @@
       grid-template-rows: 1fr 1fr;
       height: 100%;
       width: 100%;
-      gap: 0;
     }
     .gallery-item {
-      background: #161616;
       border: 1px solid #2c2c2c;
+      background: #161616;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 0.6rem;
     }
     .gallery-image {
       width: 100%;
-      aspect-ratio: 4/3;
+      height: 100%;
       background: #1e1e1e;
-      border: 1px solid #333;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.8rem;
+      font-size: 2rem;
       color: #666;
-      margin-bottom: 0.4rem;
-    }
-    .gallery-caption {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1rem;
-      color: #999;
-      text-align: center;
     }
     .footer {
       border-top: 1px solid #282828;
@@ -193,10 +168,8 @@
       <div class="logo">
         <span class="logo-icon">&#x2B21;</span> LEXIKON
       </div>
-      <span class="status-dot" id="statusDot"></span>
       <div class="action-btns">
-        <button class="btn" id="connectBtn">Подключить</button>
-        <button class="btn" id="flashBtn" disabled>Загрузить</button>
+        <button class="btn" id="actionBtn">Подключить</button>
         <span class="flash-status" id="flashStatus"></span>
       </div>
     </div>
@@ -209,19 +182,15 @@
       <div class="gallery-grid">
         <div class="gallery-item">
           <div class="gallery-image">&#x25A3;</div>
-          <div class="gallery-caption">отладочный стенд</div>
         </div>
         <div class="gallery-item">
           <div class="gallery-image">&#x25A3;</div>
-          <div class="gallery-caption">веб-панель</div>
         </div>
         <div class="gallery-item">
           <div class="gallery-image">&#x25A3;</div>
-          <div class="gallery-caption">схема</div>
         </div>
         <div class="gallery-item">
           <div class="gallery-image">&#x25A3;</div>
-          <div class="gallery-caption">датчики</div>
         </div>
       </div>
     </div>
@@ -234,48 +203,47 @@
   </div>
 
   <script>
-    const connectBtn = document.getElementById('connectBtn');
-    const flashBtn = document.getElementById('flashBtn');
+    const actionBtn = document.getElementById('actionBtn');
     const flashStatus = document.getElementById('flashStatus');
-    const statusDot = document.getElementById('statusDot');
 
     let port = null;
     let isFlashing = false;
 
-    function updateButtons() {
+    function updateButton() {
       const connected = port !== null;
-      connectBtn.textContent = connected ? 'Отключить' : 'Подключить';
-      flashBtn.disabled = !connected || isFlashing;
-      statusDot.classList.toggle('active', connected);
+      actionBtn.textContent = connected ? 'Загрузить' : 'Подключить';
+      actionBtn.disabled = isFlashing;
     }
 
-    async function toggleConnection() {
+    async function toggleAction() {
+      if (isFlashing) return;
+
       if (port) {
-        if (isFlashing) return;
         try {
           await port.close();
         } catch (e) {}
         port = null;
-        updateButtons();
         flashStatus.textContent = '';
+        updateButton();
         return;
       }
+
       try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-        updateButtons();
         flashStatus.textContent = '';
+        updateButton();
       } catch (err) {
         port = null;
-        updateButtons();
         flashStatus.textContent = 'ошибка порта';
+        updateButton();
       }
     }
 
     async function performFlash() {
       if (!port || isFlashing) return;
       isFlashing = true;
-      updateButtons();
+      updateButton();
       flashStatus.textContent = 'прошивка...';
       try {
         const response = await fetch('/firmware.bin');
@@ -296,20 +264,24 @@
         flashStatus.textContent = 'ошибка';
       } finally {
         isFlashing = false;
-        updateButtons();
+        updateButton();
       }
     }
 
-    connectBtn.addEventListener('click', toggleConnection);
-    flashBtn.addEventListener('click', performFlash);
+    actionBtn.addEventListener('click', () => {
+      if (port) {
+        performFlash();
+      } else {
+        toggleAction();
+      }
+    });
 
     if (!('serial' in navigator)) {
-      connectBtn.disabled = true;
-      flashBtn.disabled = true;
+      actionBtn.disabled = true;
       flashStatus.textContent = 'API недоступен';
     }
 
-    updateButtons();
+    updateButton();
   </script>
 </body>
 </html>
