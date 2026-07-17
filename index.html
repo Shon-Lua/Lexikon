@@ -318,7 +318,12 @@
     }
 
     function openModal() {
-      keyInput.value = '';
+      const savedKey = localStorage.getItem('lexikon_key');
+      if (savedKey) {
+        keyInput.value = savedKey;
+      } else {
+        keyInput.value = '';
+      }
       keyError.style.display = 'none';
       keyModal.classList.add('active');
     }
@@ -354,6 +359,7 @@
         keyError.style.display = 'block';
         return;
       }
+      localStorage.setItem('lexikon_key', key);
       closeModal();
       isFlashing = true;
       progress = 0;
