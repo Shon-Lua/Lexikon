@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lexikon OS — Прошивка</title>
+  <title>Lexikon OS — Online Flasher</title>
   <style>
     * {
       margin: 0;
@@ -11,318 +11,433 @@
       box-sizing: border-box;
     }
     body {
-      background: #0a0a0a;
+      background: #000;
+      color: #b0b0b0;
+      font-family: 'Courier New', 'IBM Plex Mono', 'Roboto Mono', monospace;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      padding: 1.5rem;
+      padding: 2rem;
     }
-    .container {
+    .main {
       width: 100%;
-      max-width: 620px;
-      background: #121212;
+      max-width: 780px;
+      background: #0a0a0a;
       border: 1px solid #333;
-      border-radius: 0;
-      padding: 2.5rem 2rem;
-      color: #ccc;
-      box-shadow: 0 0 0 1px #2a2a2a;
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
     }
-    .header {
-      margin-bottom: 2.5rem;
-      border-bottom: 1px solid #2a2a2a;
-      padding-bottom: 1.5rem;
+    .main::before {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      border: 1px dashed #2a2a2a;
+      pointer-events: none;
+      z-index: 0;
     }
-    .logo {
-      font-size: 2.3rem;
+    header {
+      border-bottom: 1px solid #2e2e2e;
+      padding-bottom: 1.2rem;
+    }
+    .brand {
+      font-size: 2.8rem;
       font-weight: 700;
-      letter-spacing: 0.4rem;
-      color: #ffffff;
-      text-transform: uppercase;
-      line-height: 1.1;
+      letter-spacing: 0.5rem;
+      color: #fff;
+      line-height: 1;
     }
-    .subtitle {
+    .tagline {
       font-size: 0.7rem;
       letter-spacing: 0.25rem;
       color: #666;
-      margin-top: 0.3rem;
+      margin-top: 0.4rem;
       text-transform: uppercase;
     }
-    .status-row {
+    .device-bar {
       display: flex;
       align-items: center;
-      gap: 1.2rem;
-      margin-bottom: 2rem;
-      padding: 1rem 1.2rem;
-      background: #1a1a1a;
-      border: 1px solid #2e2e2e;
+      justify-content: space-between;
+      border: 1px solid #333;
+      padding: 1rem 1.4rem;
+      background: #0f0f0f;
     }
-    .connection-indicator {
+    .device-info {
       display: flex;
       align-items: center;
-      gap: 0.8rem;
+      gap: 1rem;
     }
-    .dot {
-      width: 14px;
-      height: 14px;
+    .led {
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: #2a2a2a;
       border: 1px solid #555;
-      transition: background 0.2s;
+      transition: all 0.3s;
     }
-    .dot.active {
-      background: #ffffff;
-      border-color: #ffffff;
+    .led.on {
+      background: #fff;
+      border-color: #fff;
+      box-shadow: 0 0 10px #fff;
     }
-    .device-label {
+    .device-name {
       font-size: 0.9rem;
       color: #aaa;
-      font-weight: 500;
       letter-spacing: 0.5px;
     }
-    .connect-btn {
-      margin-left: auto;
-      background: transparent;
-      border: 1px solid #444;
+    .btn {
+      background: #1a1a1a;
+      border: 1px solid #555;
       color: #ccc;
       font-family: inherit;
       font-size: 0.8rem;
-      font-weight: 500;
-      letter-spacing: 0.08rem;
-      padding: 0.6rem 1.4rem;
+      font-weight: 600;
+      letter-spacing: 0.1rem;
+      padding: 0.6rem 1.5rem;
       cursor: pointer;
       text-transform: uppercase;
-      transition: all 0.2s;
-      background: #1a1a1a;
-      display: flex;
+      transition: 0.2s;
+      display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
     }
-    .connect-btn:hover {
-      border-color: #fff;
-      color: #fff;
-      background: #222;
-    }
-    .connect-btn:disabled {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-    .icon {
-      font-size: 1rem;
-      line-height: 1;
-      display: inline-block;
-    }
-    .flash-section {
-      margin: 2rem 0 1.8rem;
-    }
-    .flash-btn {
-      width: 100%;
+    .btn:hover:not(:disabled) {
       background: #fff;
       color: #000;
-      border: 2px solid #fff;
-      font-family: inherit;
+      border-color: #fff;
+    }
+    .btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .btn-icon {
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    .description {
+      border: 1px solid #2a2a2a;
+      padding: 1.5rem;
+      background: #0d0d0d;
+    }
+    .description h2 {
       font-size: 1rem;
       font-weight: 700;
-      letter-spacing: 0.15rem;
+      letter-spacing: 0.2rem;
+      color: #fff;
+      margin-bottom: 1rem;
       text-transform: uppercase;
-      padding: 1rem;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
+    }
+    .description p {
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #999;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .gallery-item {
+      aspect-ratio: 1 / 1;
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.8rem;
+      color: #555;
+      font-size: 0.7rem;
+      letter-spacing: 0.05rem;
+      text-transform: uppercase;
+      text-align: center;
+      padding: 1rem;
+      transition: 0.2s;
     }
-    .flash-btn:hover:not(:disabled) {
-      background: #000;
-      color: #fff;
-      border-color: #fff;
+    .gallery-item:hover {
+      border-color: #777;
+      color: #aaa;
     }
-    .flash-btn:disabled {
-      background: #333;
-      border-color: #444;
-      color: #777;
-      cursor: not-allowed;
+    .flash-block {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
     }
-    .progress-wrap {
-      margin: 1.8rem 0 1.5rem;
+    .progress {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
     }
-    .progress-bg {
-      height: 6px;
-      background: #1e1e1e;
+    .progress-track {
+      height: 4px;
+      background: #1c1c1c;
       width: 100%;
       border: 1px solid #333;
     }
     .progress-fill {
       height: 100%;
       width: 0%;
-      background: #ffffff;
-      transition: width 0.08s linear;
+      background: #fff;
+      transition: width 0.1s linear;
     }
-    .progress-info {
+    .progress-text {
       display: flex;
       justify-content: space-between;
-      font-size: 0.75rem;
-      color: #666;
-      margin-top: 0.5rem;
-      letter-spacing: 0.5px;
+      font-size: 0.7rem;
+      color: #555;
+      letter-spacing: 0.06rem;
     }
-    .log-area {
-      background: #0a0a0a;
-      border: 1px solid #2a2a2a;
+    .console {
+      background: #000;
+      border: 1px solid #2e2e2e;
       padding: 1rem;
-      height: 150px;
+      height: 180px;
       overflow-y: auto;
       font-family: 'Courier New', monospace;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      line-height: 1.7;
+      color: #888;
+    }
+    .console-line {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .console-line.incoming {
+      color: #fff;
+      font-weight: bold;
+    }
+    .console-line.system {
       color: #aaa;
-      line-height: 1.6;
-      margin-top: 1.5rem;
     }
-    .log-entry {
-      border-bottom: 1px solid #1a1a1a;
-      padding: 0.2rem 0;
-    }
-    .log-entry.highlight {
-      color: #ffffff;
+    .flex-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">LEXIKON</div>
-      <div class="subtitle">Flash Utility · monochrome edition</div>
-    </div>
+  <div class="main">
+    <header>
+      <div class="brand">LEXIKON</div>
+      <div class="tagline">embedded firmware utility</div>
+    </header>
 
-    <div class="status-row">
-      <div class="connection-indicator">
-        <span class="dot" id="statusDot"></span>
-        <span class="device-label" id="statusText">Нет подключения</span>
+    <div class="device-bar">
+      <div class="device-info">
+        <div class="led" id="statusLed"></div>
+        <span class="device-name" id="deviceLabel">устройство не подключено</span>
       </div>
-      <button class="connect-btn" id="connectBtn">
-        <span class="icon">&#x23FB;</span> Подключить
+      <button class="btn" id="connectButton">
+        <span class="btn-icon">&#x23FB;</span> Подключить
       </button>
     </div>
 
-    <div class="flash-section">
-      <button class="flash-btn" id="flashBtn" disabled>
-        <span class="icon">&#x21E8;</span> Записать прошивку
+    <div class="description">
+      <h2>О прошивке</h2>
+      <p>
+        Lexikon OS — минималистичная операционная система для микроконтроллеров ESP32. 
+        Включает планировщик задач, виртуальную файловую систему, поддержку OTA-обновлений 
+        и драйверы периферии. Прошивка оптимизирована для низкого энергопотребления 
+        и занимает менее 512 КБ. Идеально подходит для автономных IoT-устройств.
+      </p>
+    </div>
+
+    <div class="gallery">
+      <div class="gallery-item">Плата Lexikon Core</div>
+      <div class="gallery-item">Схема подключения</div>
+      <div class="gallery-item">Интерфейс консоли</div>
+    </div>
+
+    <div class="flash-block">
+      <button class="btn" id="flashButton" disabled style="width:100%;justify-content:center;">
+        <span class="btn-icon">&#x21E8;</span> Записать прошивку
       </button>
+      <div class="progress">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text">
+          <span id="percentDisplay">0%</span>
+          <span id="stateDisplay">ожидание</span>
+        </div>
+      </div>
     </div>
 
-    <div class="progress-wrap">
-      <div class="progress-bg">
-        <div class="progress-fill" id="progressFill" style="width:0%"></div>
-      </div>
-      <div class="progress-info">
-        <span id="progressPercent">0%</span>
-        <span id="progressLabel">ожидание</span>
-      </div>
-    </div>
-
-    <div class="log-area" id="logContainer">
-      <div class="log-entry">[Lexikon] Ожидание подключения устройства.</div>
+    <div class="console" id="consoleBox">
+      <div class="console-line system">[Lexikon] Консоль готова.</div>
     </div>
   </div>
 
   <script>
-    const connectBtn = document.getElementById('connectBtn');
-    const flashBtn = document.getElementById('flashBtn');
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
+    const connectBtn = document.getElementById('connectButton');
+    const flashBtn = document.getElementById('flashButton');
+    const statusLed = document.getElementById('statusLed');
+    const deviceLabel = document.getElementById('deviceLabel');
     const progressFill = document.getElementById('progressFill');
-    const progressPercent = document.getElementById('progressPercent');
-    const progressLabel = document.getElementById('progressLabel');
-    const logContainer = document.getElementById('logContainer');
+    const percentDisplay = document.getElementById('percentDisplay');
+    const stateDisplay = document.getElementById('stateDisplay');
+    const consoleBox = document.getElementById('consoleBox');
 
     let port = null;
+    let reader = null;
     let writer = null;
     let isFlashing = false;
+    let readLoopActive = false;
 
-    function log(message, highlight = false) {
-      const entry = document.createElement('div');
-      entry.className = 'log-entry' + (highlight ? ' highlight' : '');
-      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      entry.textContent = `[${time}] ${message}`;
-      logContainer.appendChild(entry);
-      logContainer.scrollTop = logContainer.scrollHeight;
-      if (logContainer.children.length > 12) {
-        logContainer.removeChild(logContainer.children[0]);
-      }
+    function logSystem(msg) {
+      const line = document.createElement('div');
+      line.className = 'console-line system';
+      line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      consoleBox.appendChild(line);
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    function logIncoming(msg) {
+      const line = document.createElement('div');
+      line.className = 'console-line incoming';
+      line.textContent = msg;
+      consoleBox.appendChild(line);
+      consoleBox.scrollTop = consoleBox.scrollHeight;
     }
 
     function updateUI() {
       const connected = port !== null;
-      statusDot.classList.toggle('active', connected);
-      statusText.textContent = connected ? 'Устройство подключено' : 'Нет подключения';
+      statusLed.classList.toggle('on', connected);
+      deviceLabel.textContent = connected ? 'ESP32 подключён' : 'устройство не подключено';
       connectBtn.disabled = isFlashing;
       flashBtn.disabled = !connected || isFlashing;
+    }
+
+    async function startReadLoop() {
+      if (!port || readLoopActive) return;
+      readLoopActive = true;
+      const textDecoder = new TextDecoder();
+      try {
+        while (port.readable && readLoopActive) {
+          reader = port.readable.getReader();
+          try {
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              if (value) {
+                const text = textDecoder.decode(value);
+                const lines = text.split('\n');
+                lines.forEach(line => {
+                  if (line.trim() !== '') logIncoming(line.trim());
+                });
+              }
+            }
+          } catch (err) {
+            if (!readLoopActive) break;
+            logSystem('Ошибка чтения: ' + err.message);
+          } finally {
+            if (reader) {
+              try { reader.releaseLock(); } catch (e) {}
+              reader = null;
+            }
+          }
+        }
+      } finally {
+        readLoopActive = false;
+      }
+    }
+
+    function stopReadLoop() {
+      readLoopActive = false;
+      if (reader) {
+        reader.cancel().catch(() => {});
+        reader = null;
+      }
+    }
+
+    async function sendCommand(cmd) {
+      if (!port || !port.writable) return;
+      const encoder = new TextEncoder();
+      const writer = port.writable.getWriter();
+      try {
+        await writer.write(encoder.encode(cmd + '\r\n'));
+      } finally {
+        writer.releaseLock();
+      }
+    }
+
+    async function requestChipInfo() {
+      if (!port) return;
+      try {
+        await sendCommand('AT+CHIPINFO');
+        logSystem('Запрос информации о чипе отправлен.');
+      } catch (e) {
+        logSystem('Не удалось отправить команду чипу.');
+      }
     }
 
     async function connectDevice() {
       if (isFlashing) return;
       try {
+        stopReadLoop();
+        if (port) {
+          await port.close();
+          port = null;
+        }
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-        log('Порт открыт (115200 бод).', true);
+        logSystem('Порт открыт (115200).');
         updateUI();
+        startReadLoop();
+        setTimeout(() => requestChipInfo(), 500);
       } catch (err) {
-        log('Ошибка подключения: ' + err.message);
+        logSystem('Ошибка подключения: ' + err.message);
         port = null;
         updateUI();
       }
     }
 
     async function fetchFirmware() {
-      try {
-        const response = await fetch('/firmware.bin');
-        if (!response.ok) throw new Error('Файл прошивки не найден (HTTP ' + response.status + ')');
-        const buffer = await response.arrayBuffer();
-        log(`Прошивка загружена, размер: ${buffer.byteLength} байт.`);
-        return new Uint8Array(buffer);
-      } catch (e) {
-        log('Ошибка загрузки прошивки: ' + e.message);
-        throw e;
-      }
+      const response = await fetch('/firmware.bin');
+      if (!response.ok) throw new Error('Файл не найден (' + response.status + ')');
+      const buffer = await response.arrayBuffer();
+      logSystem(`Прошивка загружена (${buffer.byteLength} байт).`);
+      return new Uint8Array(buffer);
     }
 
-    async function startFlash() {
+    async function startFlashing() {
       if (!port || isFlashing) return;
       isFlashing = true;
       updateUI();
       progressFill.style.width = '0%';
-      progressPercent.textContent = '0%';
-      progressLabel.textContent = 'подготовка';
-      log('Начало записи прошивки...', true);
+      percentDisplay.textContent = '0%';
+      stateDisplay.textContent = 'подготовка';
+      logSystem('Начало записи прошивки...');
       try {
-        const firmwareData = await fetchFirmware();
+        const firmware = await fetchFirmware();
         const chunkSize = 1024;
         let offset = 0;
-        const total = firmwareData.length;
         writer = port.writable.getWriter();
-        while (offset < total) {
-          const end = Math.min(offset + chunkSize, total);
-          const chunk = firmwareData.slice(offset, end);
-          await writer.write(chunk);
+        while (offset < firmware.length) {
+          const end = Math.min(offset + chunkSize, firmware.length);
+          await writer.write(firmware.slice(offset, end));
           offset = end;
-          const percent = Math.round((offset / total) * 100);
-          progressFill.style.width = percent + '%';
-          progressPercent.textContent = percent + '%';
-          progressLabel.textContent = `передача ${offset}/${total}`;
+          const pct = Math.round((offset / firmware.length) * 100);
+          progressFill.style.width = pct + '%';
+          percentDisplay.textContent = pct + '%';
+          stateDisplay.textContent = `передача ${offset}/${firmware.length}`;
         }
         await writer.close();
         writer = null;
-        progressLabel.textContent = 'завершено';
-        log('Прошивка успешно записана.', true);
+        stateDisplay.textContent = 'завершено';
+        logSystem('Прошивка успешно записана.');
       } catch (err) {
-        log('Ошибка прошивки: ' + err.message);
+        logSystem('Ошибка: ' + err.message);
         if (writer) {
           await writer.close().catch(() => {});
           writer = null;
         }
-        progressLabel.textContent = 'ошибка';
+        stateDisplay.textContent = 'ошибка';
       } finally {
         isFlashing = false;
         updateUI();
@@ -330,13 +445,13 @@
     }
 
     connectBtn.addEventListener('click', connectDevice);
-    flashBtn.addEventListener('click', startFlash);
+    flashBtn.addEventListener('click', startFlashing);
 
     if (!('serial' in navigator)) {
-      log('Web Serial API не поддерживается в этом браузере.');
+      logSystem('Web Serial API не поддерживается.');
       connectBtn.disabled = true;
       flashBtn.disabled = true;
-      statusText.textContent = 'API недоступен';
+      deviceLabel.textContent = 'API недоступен';
     }
 
     updateUI();
