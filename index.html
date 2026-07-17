@@ -207,10 +207,20 @@
       margin-bottom: 0.9rem;
       display: none;
     }
-    .modal-buttons {
+    .modal-actions {
       display: flex;
-      gap: 0.8rem;
+      justify-content: space-between;
+      align-items: center;
       margin-top: 1.2rem;
+    }
+    .no-key-text {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    .key-link {
+      color: #fff;
+      text-decoration: underline;
+      cursor: pointer;
     }
     .modal-btn {
       background: transparent;
@@ -271,10 +281,10 @@
   <div class="modal-overlay" id="keyModal">
     <div class="modal-box">
       <div class="modal-title">Enter Product Key</div>
-      <input type="text" class="modal-input" id="keyInput" placeholder="Product key">
+      <input type="text" class="modal-input" id="keyInput" placeholder="gsk_XXXXXXXXXXXXXX">
       <div class="modal-error" id="keyError">Key is required</div>
-      <div class="modal-buttons">
-        <button class="modal-btn" id="getKeyBtn">Get Key</button>
+      <div class="modal-actions">
+        <span class="no-key-text">I don't have a <span class="key-link" id="noKeyLink">key</span></span>
         <button class="modal-btn" id="continueBtn">Continue</button>
       </div>
     </div>
@@ -285,8 +295,8 @@
     const keyModal = document.getElementById('keyModal');
     const keyInput = document.getElementById('keyInput');
     const keyError = document.getElementById('keyError');
-    const getKeyBtn = document.getElementById('getKeyBtn');
     const continueBtn = document.getElementById('continueBtn');
+    const noKeyLink = document.getElementById('noKeyLink');
 
     let port = null;
     let isFlashing = false;
@@ -377,7 +387,8 @@
 
     continueBtn.addEventListener('click', startFlash);
 
-    getKeyBtn.addEventListener('click', () => {
+    noKeyLink.addEventListener('click', (e) => {
+      e.stopPropagation();
       window.open('https://example.com/get-key', '_blank');
     });
 
