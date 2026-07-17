@@ -175,7 +175,7 @@
       background: #181818;
       border: 1px solid #fff;
       padding: 2.2rem;
-      width: 380px;
+      width: 340px;
       max-width: 90%;
       color: #ccc;
       box-shadow: 0 20px 40px rgba(0,0,0,0.9);
@@ -188,6 +188,9 @@
       margin-bottom: 1.5rem;
       color: #fff;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .modal-input {
       width: 100%;
@@ -280,7 +283,9 @@
 
   <div class="modal-overlay" id="keyModal">
     <div class="modal-box">
-      <div class="modal-title">Enter Product Key</div>
+      <div class="modal-title">
+        <span>&#128273;</span> Enter Key
+      </div>
       <input type="text" class="modal-input" id="keyInput" placeholder="gsk_XXXXXXXXXXXXXX">
       <div class="modal-error" id="keyError">Key is required</div>
       <div class="modal-actions">
