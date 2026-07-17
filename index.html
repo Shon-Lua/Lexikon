@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Lexikon OS • Прошивка плат онлайн</title>
+  <!-- Шрифты в стиле техно -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(ellipse at 30% 10%, #0a0f1e 0%, #02040a 100%);
+      min-height: 100vh;
+      font-family: 'Roboto Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      margin: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Декоративная сетка на фоне */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Неоновые акценты */
+    body::after {
+      content: "";
+      position: fixed;
+      top: -20%;
+      left: -10%;
+      width: 60%;
+      height: 80%;
+      background: radial-gradient(circle at 30% 40%, rgba(0, 180, 255, 0.08) 0%, transparent 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 750px;
+      background: rgba(8, 12, 25, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 2.5rem;
+      box-shadow: 0 25px 50px -8px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 255, 255, 0.15), 0 0 60px rgba(0, 180, 255, 0.25);
+      padding: 2.5rem 2.2rem;
+      color: #e0f0ff;
+      transition: all 0.3s ease;
+    }
+
+    /* Логотип и заголовок */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      margin-bottom: 2.8rem;
+    }
+
+    .logo-glow {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      font-size: 3.2rem;
+      letter-spacing: 0.5rem;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #a0f0ff 0%, #4facfe 50%, #00e5ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 15px #00a6ff);
+      margin-bottom: 0.3rem;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 500;
+      font-size: 0.9rem;
+      letter-spacing: 0.3rem;
+      color: #7fb0d0;
+      text-transform: uppercase;
+      background: rgba(0, 200, 255, 0.08);
+      padding: 0.4rem 1.5rem;
+      border-radius: 30px;
+      border: 1px solid rgba(0, 255, 200, 0.25);
+    }
+
+    /* Карточка статуса устройства */
+    .device-panel {
+      background: rgba(0, 15, 30, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 255, 255, 0.25);
+      border-radius: 2rem;
+      padding: 1.5rem 1.8rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: inset 0 0 25px rgba(0, 150, 255, 0.2);
+    }
+
+    .device-indicator {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .led {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ff3a6f;
+      box-shadow: 0 0 15px #ff3a6f;
+      transition: all 0.3s ease;
+    }
+
+    .led.connected {
+      background: #00ffaa;
+      box-shadow: 0 0 25px #00ffaa, 0 0 10px #00ffaa;
+    }
+
+    .device-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #cceeff;
+      letter-spacing: 0.5px;
+    }
+
+    .board-selector {
+      background: #0a1424;
+      border: 1px solid #2f5577;
+      border-radius: 2.5rem;
+      padding: 0.7rem 1.4rem;
+      color: white;
+      font-family: 'Roboto Mono', monospace;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="%2300ccff"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      appearance: none;
+      padding-right: 2.5rem;
+      background-color: #0b1425;
+    }
+
+    .board-selector:hover {
+      border-color: #00e5ff;
+      box-shadow: 0 0 18px rgba(0, 229, 255, 0.4);
+    }
+
+    /* Область загрузки прошивки */
+    .firmware-zone {
+      background: rgba(0, 20, 40, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px dashed rgba(0, 200, 255, 0.45);
+      border-radius: 1.8rem;
+      padding: 2rem 1.5rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .firmware-zone:hover {
+      background: rgba(0, 40, 70, 0.5);
+      border-color: #00f2ff;
+      box-shadow: 0 0 30px rgba(0, 180, 255, 0.3);
+    }
+
+    .firmware-label {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #9ec7e0;
+    }
+
+    .file-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #fff;
+      margin-top: 0.4rem;
+      word-break: break-all;
+    }
+
+    .hidden-input {
+      display: none;
+    }
+
+    /* Прогресс */
+    .progress-section {
+      margin: 1.8rem 0 1.5rem;
+    }
+
+    .progress-bar-bg {
+      background: #0e1a2b;
+      height: 14px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: inset 0 0 8px #000000;
+      border: 1px solid #2c4055;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #00c9ff, #00ffb3, #00e0ff);
+      box-shadow: 0 0 20px #00b7ff;
+      border-radius: 20px;
+      transition: width 0.1s linear;
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #a2c4dd;
+    }
+
+    /* Лог */
+    .log-console {
+      background: #020812;
+      border: 1px solid #1e405b;
+      border-radius: 1.5rem;
+      padding: 1.2rem;
+      height: 130px;
+      overflow-y: auto;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.8rem;
+      color: #b0e0ff;
+      margin: 1.8rem 0 1.5rem;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+      line-height: 1.6;
+    }
+
+    .log-line {
+      border-bottom: 1px solid rgba(0, 255, 200, 0.08);
+      padding: 0.2rem 0;
+      color: #8bb9e0;
+    }
+
+    .log-line.success {
+      color: #00ffb3;
+    }
+    .log-line.warning {
+      color: #ffb347;
+    }
+
+    /* Кнопка прошивки */
+    .flash-btn {
+      background: linear-gradient(145deg, #001f3f, #00142b);
+      border: 1px solid #00a6ff;
+      border-radius: 3rem;
+      padding: 1rem 2.2rem;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: 0.2rem;
+      color: #e0f5ff;
+      text-transform: uppercase;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.25s;
+      box-shadow: 0 5px 20px rgba(0, 160, 255, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .flash-btn:hover:not(:disabled) {
+      background: #002b55;
+      border-color: #00e0ff;
+      box-shadow: 0 0 35px #0077ff;
+      transform: translateY(-2px);
+      color: white;
+    }
+
+    .flash-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+      box-shadow: none;
+    }
+
+    .icon-flash {
+      font-size: 1.3rem;
+      filter: drop-shadow(0 0 6px cyan);
+    }
+
+    /* Адаптив */
+    @media (max-width: 500px) {
+      .container {
+        padding: 1.8rem 1.2rem;
+      }
+      .logo-glow {
+        font-size: 2.3rem;
+        letter-spacing: 0.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-glow">LEXIKON</div>
+      <div class="subtitle">Flash Center • OS v2.4</div>
+    </div>
+
+    <!-- Выбор платы -->
+    <div class="device-panel">
+      <div class="device-indicator">
+        <span class="led" id="deviceLed"></span>
+        <span class="device-name" id="deviceStatusText">Устройство не выбрано</span>
+      </div>
+      <select class="board-selector" id="boardSelect">
+        <option value="">-- Выберите плату --</option>
+        <option value="Lexikon Core X1">Lexikon Core X1 (ARM)</option>
+        <option value="Lexikon Node v3">Lexikon Node v3 (RISC-V)</option>
+        <option value="Lexikon Matrix Pro">Lexikon Matrix Pro</option>
+        <option value="Lexikon Pico-LEX">Lexikon Pico-LEX</option>
+      </select>
+    </div>
+
+    <!-- Зона загрузки прошивки -->
+    <div class="firmware-zone" id="firmwareDropZone">
+      <span class="firmware-label">⟁ ПРОШИВКА LEXIKON ⟁</span>
+      <div class="file-name" id="fileNameDisplay">.lex или .bin файл не загружен</div>
+      <input type="file" id="firmwareInput" class="hidden-input" accept=".lex,.bin,.hex,.fw">
+    </div>
+
+    <!-- Прогресс бар -->
+    <div class="progress-section">
+      <div class="progress-bar-bg">
+        <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+      </div>
+      <div class="progress-text">
+        <span id="progressPercent">0%</span>
+        <span id="progressState">Ожидание</span>
+      </div>
+    </div>
+
+    <!-- Лог операций -->
+    <div class="log-console" id="logConsole">
+      <div class="log-line">[LEXIKON] Консоль готова. Выберите плату и прошивку.</div>
+    </div>
+
+    <!-- Кнопка запуска -->
+    <button class="flash-btn" id="flashButton" disabled>
+      <span class="icon-flash">⚡</span> ЗАПУСТИТЬ ПРОШИВКУ
+    </button>
+  </div>
+
+  <script>
+    (function() {
+      // DOM элементы
+      const boardSelect = document.getElementById('boardSelect');
+      const deviceLed = document.getElementById('deviceLed');
+      const deviceStatusText = document.getElementById('deviceStatusText');
+      const firmwareInput = document.getElementById('firmwareInput');
+      const firmwareDropZone = document.getElementById('firmwareDropZone');
+      const fileNameDisplay = document.getElementById('fileNameDisplay');
+      const flashButton = document.getElementById('flashButton');
+      const progressFill = document.getElementById('progressFill');
+      const progressPercent = document.getElementById('progressPercent');
+      const progressState = document.getElementById('progressState');
+      const logConsole = document.getElementById('logConsole');
+
+      // Состояния
+      let selectedBoard = null;
+      let firmwareFile = null;
+      let isFlashing = false;
+      let flashInterval = null;
+      let currentProgress = 0;
+
+      // Функция логирования
+      function addLog(message, type = 'info') {
+        const logLine = document.createElement('div');
+        logLine.classList.add('log-line');
+        if (type === 'success') logLine.classList.add('success');
+        if (type === 'warning') logLine.classList.add('warning');
+        const timestamp = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+        logLine.textContent = `[${timestamp}] ${message}`;
+        logConsole.appendChild(logLine);
+        logConsole.scrollTop = logConsole.scrollHeight;
+        
+        // Ограничим количество строк, чтобы не перегружать
+        if (logConsole.children.length > 12) {
+          logConsole.removeChild(logConsole.children[0]);
+        }
+      }
+
+      // Обновление доступности кнопки
+      function updateFlashButtonState() {
+        if (isFlashing) {
+          flashButton.disabled = true;
+          return;
+        }
+        flashButton.disabled = !(selectedBoard && firmwareFile);
+      }
+
+      // Сброс прогресса
+      function resetProgress() {
+        if (flashInterval) {
+          clearInterval(flashInterval);
+          flashInterval = null;
+        }
+        currentProgress = 0;
+        progressFill.style.width = '0%';
+        progressPercent.textContent = '0%';
+        progressState.textContent = 'Ожидание';
+      }
+
+      // Обработчик выбора платы
+      boardSelect.addEventListener('change', function(e) {
+        selectedBoard = e.target.value;
+        if (selectedBoard) {
+          deviceLed.classList.add('connected');
+          deviceStatusText.textContent = `${selectedBoard} (подключено)`;
+          addLog(`Плата обнаружена: ${selectedBoard}`, 'success');
+        } else {
+          deviceLed.classList.remove('connected');
+          deviceStatusText.textContent = 'Устройство не выбрано';
+          addLog('Плата отключена.', 'warning');
+        }
+        updateFlashButtonState();
+        // Если идет прошивка – нельзя менять (но блокировка кнопки уже есть)
+      });
+
+      // Работа с файлом через drag&drop и клик
+      firmwareDropZone.addEventListener('click', () => {
+        if (isFlashing) {
+          addLog('⚠️ Дождитесь завершения текущей операции.', 'warning');
+          return;
+        }
+        firmwareInput.click();
+      });
+
+      firmwareInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+          firmwareFile = e.target.files[0];
+          fileNameDisplay.textContent = firmwareFile.name;
+          addLog(`Файл прошивки загружен: ${firmwareFile.name} (${(firmwareFile.size/1024).toFixed(1)} KB)`, 'success');
+        } else {
+          firmwareFile = null;
+          fileNameDisplay.textContent = '.lex или .bin файл не загружен';
+        }
+        updateFlashButtonState();
+      });
+
+      // Drag & drop
+      firmwareDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        firmwareDropZone.style.borderColor = '#00f2ff';
+      });
+      firmwareDropZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        firmwareDropZone.style.borderColor = 'rgba(0, 200, 255, 0.45)';
+      });
+      firmwareDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        firmwareDropZone.style.borderColor = 'rgba(0, 200, 255, 0.45)';
+        if (isFlashing) {
+          addLog('Прошивка уже выполняется.', 'warning');
+          return;
+        }
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          firmwareFile = e.dataTransfer.files[0];
+          fileNameDisplay.textContent = firmwareFile.name;
+          addLog(`Файл прошивки (drop): ${firmwareFile.name}`, 'success');
+          updateFlashButtonState();
+        }
+      });
+
+      // Симуляция процесса прошивки
+      function startFlashing() {
+        if (!selectedBoard || !firmwareFile || isFlashing) return;
+        
+        isFlashing = true;
+        flashButton.disabled = true;
+        boardSelect.disabled = true;
+        resetProgress();
+        
+        addLog(`🔹 Начало прошивки для ${selectedBoard}...`, 'info');
+        addLog(`Прошивка: ${firmwareFile.name}`, 'info');
+        progressState.textContent = 'Инициализация';
+        
+        // Симуляция шагов
+        const steps = [
+          { progress: 5, text: 'Проверка целостности', delay: 400 },
+          { progress: 15, text: 'Резервное копирование разделов', delay: 600 },
+          { progress: 30, text: 'Стирание памяти', delay: 500 },
+          { progress: 45, text: 'Запись загрузчика', delay: 700 },
+          { progress: 65, text: 'Прошивка ядра Lexikon', delay: 800 },
+          { progress: 82, text: 'Установка системных модулей', delay: 600 },
+          { progress: 95, text: 'Верификация подписи', delay: 500 },
+          { progress: 100, text: 'Готово', delay: 300 }
+        ];
+
+        let stepIndex = 0;
+        
+        function executeStep() {
+          if (stepIndex >= steps.length) {
+            // Завершение
+            clearInterval(flashInterval);
+            flashInterval = null;
+            progressFill.style.width = '100%';
+            progressPercent.textContent = '100%';
+            progressState.textContent = '✅ Успешно';
+            addLog('✔ Прошивка Lexikon успешно завершена! Плата готова.', 'success');
+            isFlashing = false;
+            boardSelect.disabled = false;
+            updateFlashButtonState();
+            // Сбросим через некоторое время прогресс (опционально)
+            setTimeout(() => {
+              if (!isFlashing) {
+                resetProgress();
+                progressState.textContent = 'Готово к новой задаче';
+              }
+            }, 3000);
+            return;
+          }
+
+          const step = steps[stepIndex];
+          
+          flashInterval = setTimeout(() => {
+            currentProgress = step.progress;
+            progressFill.style.width = currentProgress + '%';
+            progressPercent.textContent = currentProgress + '%';
+            progressState.textContent = step.text;
+            
+            if (step.text.includes('Верификация') || step.text.includes('Готово')) {
+              addLog(`✔ ${step.text}`, 'success');
+            } else {
+              addLog(`⏳ ${step.text} (${currentProgress}%)`, 'info');
+            }
+            
+            stepIndex++;
+            executeStep();
+          }, step.delay);
+        }
+
+        executeStep();
+      }
+
+      // Кнопка запуска
+      flashButton.addEventListener('click', startFlashing);
+
+      // Дополнительно: сброс при выборе новой платы во время неактивности
+      // Также предотвратим случайный сброс во время прошивки (disabled select)
+
+      // Инициализация
+      addLog('Добро пожаловать в Lexikon Flash Center.', 'info');
+      addLog('Готов к подключению оборудования.', 'info');
+      updateFlashButtonState();
+    })();
+  </script>
+</body>
+</html>
