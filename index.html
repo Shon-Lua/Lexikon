@@ -12,7 +12,11 @@
     }
     body {
       background: #0a0a0a;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -21,15 +25,16 @@
     }
     .main-container {
       width: 100%;
-      max-width: 700px;
+      max-width: 720px;
       height: 100%;
       max-height: calc(100vh - 3rem);
-      background: #111;
-      border: 1px solid #333;
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      box-shadow: 0 0 30px rgba(255,255,255,0.03);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      padding: 2rem;
+      padding: 2rem 2rem 1.8rem;
       gap: 2rem;
     }
     .top-panel {
@@ -44,93 +49,146 @@
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      font-size: 1.8rem;
+      font-size: 1.9rem;
       font-weight: 700;
       letter-spacing: 0.4rem;
-      color: #fff;
+      color: #ffffff;
       text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(255,255,255,0.15);
     }
-    .logo-icon {
-      font-size: 1.6rem;
-      color: #ccc;
+    .logo-symbol {
+      font-size: 1.8rem;
+      color: #ddd;
+      filter: drop-shadow(0 0 4px white);
     }
-    .action-btns {
+    .action-group {
       margin-left: auto;
       display: flex;
-      gap: 0.8rem;
       align-items: center;
+      gap: 1rem;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #333;
+      border: 1px solid #555;
+      transition: 0.2s;
+    }
+    .status-dot.connected {
+      background: #fff;
+      border-color: #fff;
+      box-shadow: 0 0 8px white;
     }
     .btn {
-      background: transparent;
-      border: 1px solid #555;
+      background: #1a1a1a;
+      border: 1px solid #444;
       color: #ccc;
       font-family: inherit;
       font-size: 0.8rem;
       font-weight: 600;
-      letter-spacing: 0.1rem;
+      letter-spacing: 0.12rem;
       padding: 0.5rem 1.2rem;
       cursor: pointer;
       text-transform: uppercase;
-      transition: 0.2s;
+      transition: all 0.2s;
+      box-shadow: 0 0 6px rgba(255,255,255,0.05);
     }
     .btn:hover:not(:disabled) {
       border-color: #fff;
       color: #fff;
-      background: #1a1a1a;
+      background: #222;
+      box-shadow: 0 0 12px rgba(255,255,255,0.1);
     }
     .btn:disabled {
       opacity: 0.35;
       pointer-events: none;
+      box-shadow: none;
     }
-    .flash-status {
+    .flash-msg {
       font-size: 0.7rem;
       color: #888;
-      margin-left: 0.4rem;
-      letter-spacing: 0.05rem;
+      letter-spacing: 0.06rem;
+      margin-left: 0.2rem;
       white-space: nowrap;
     }
     .about-block {
       font-size: 0.9rem;
       line-height: 1.7;
       color: #aaa;
-      background: #181818;
-      border: 1px solid #2a2a2a;
-      padding: 1.2rem;
+      background: #141414;
+      border: 1px solid #292929;
+      padding: 1.3rem;
+      border-left: 3px solid #fff;
+      letter-spacing: 0.02em;
     }
     .gallery-block {
       flex: 1;
       overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #333 #111;
+    }
+    .gallery-block::-webkit-scrollbar {
+      width: 4px;
+    }
+    .gallery-block::-webkit-scrollbar-thumb {
+      background: #333;
     }
     .gallery-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 1rem;
+      padding-bottom: 0.5rem;
     }
     .gallery-item {
-      background: #181818;
-      border: 1px solid #2a2a2a;
-      padding: 1rem 0.5rem;
+      background: #161616;
+      border: 1px solid #2c2c2c;
+      padding: 1rem 0.6rem;
       display: flex;
       flex-direction: column;
       align-items: center;
+      transition: 0.2s;
+    }
+    .gallery-item:hover {
+      border-color: #555;
+      background: #1c1c1c;
     }
     .gallery-image {
       width: 100%;
       aspect-ratio: 4/3;
-      background: #1c1c1c;
+      background: #1e1e1e;
       border: 1px solid #333;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      color: #555;
-      margin-bottom: 0.6rem;
+      font-size: 2rem;
+      color: #666;
+      margin-bottom: 0.7rem;
+      transition: 0.2s;
+    }
+    .gallery-item:hover .gallery-image {
+      color: #aaa;
     }
     .gallery-caption {
       font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.08rem;
+      letter-spacing: 0.1rem;
       color: #888;
+    }
+    .footer {
+      border-top: 1px solid #2a2a2a;
+      padding-top: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.65rem;
+      color: #666;
+      letter-spacing: 0.08rem;
+      text-transform: uppercase;
+    }
+    .footer a {
+      color: #999;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -138,12 +196,13 @@
   <div class="main-container">
     <div class="top-panel">
       <div class="logo">
-        <span class="logo-icon">&#x2B21;</span> LEXIKON
+        <span class="logo-symbol">&#x2B21;</span> LEXIKON
       </div>
-      <div class="action-btns">
+      <div class="action-group">
+        <span class="status-dot" id="statusDot"></span>
         <button class="btn" id="connectBtn">Подключить</button>
         <button class="btn" id="flashBtn" disabled>Загрузить</button>
-        <span class="flash-status" id="flashStatus"></span>
+        <span class="flash-msg" id="flashMsg"></span>
       </div>
     </div>
 
@@ -155,7 +214,7 @@
       <div class="gallery-grid">
         <div class="gallery-item">
           <div class="gallery-image">&#x25A3;</div>
-          <div class="gallery-caption">отладочный стенд</div>
+          <div class="gallery-caption">отладка</div>
         </div>
         <div class="gallery-item">
           <div class="gallery-image">&#x25A3;</div>
@@ -169,20 +228,35 @@
           <div class="gallery-image">&#x25A3;</div>
           <div class="gallery-caption">датчики</div>
         </div>
+        <div class="gallery-item">
+          <div class="gallery-image">&#x25A3;</div>
+          <div class="gallery-caption">корпус</div>
+        </div>
+        <div class="gallery-item">
+          <div class="gallery-image">&#x25A3;</div>
+          <div class="gallery-caption">питание</div>
+        </div>
       </div>
+    </div>
+
+    <div class="footer">
+      <span>Lexikon OS &copy; 2025</span>
+      <span>Web Serial Flash Utility</span>
     </div>
   </div>
 
   <script>
     const connectBtn = document.getElementById('connectBtn');
     const flashBtn = document.getElementById('flashBtn');
-    const flashStatus = document.getElementById('flashStatus');
+    const flashMsg = document.getElementById('flashMsg');
+    const statusDot = document.getElementById('statusDot');
 
     let port = null;
     let isFlashing = false;
 
-    function updateButtons() {
+    function updateInterface() {
       const connected = port !== null;
+      statusDot.classList.toggle('connected', connected);
       connectBtn.textContent = connected ? 'Отключить' : 'Подключить';
       flashBtn.disabled = !connected || isFlashing;
     }
@@ -194,27 +268,27 @@
           await port.close();
         } catch (e) {}
         port = null;
-        updateButtons();
-        flashStatus.textContent = '';
+        updateInterface();
+        flashMsg.textContent = '';
         return;
       }
       try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-        updateButtons();
-        flashStatus.textContent = '';
+        updateInterface();
+        flashMsg.textContent = '';
       } catch (err) {
         port = null;
-        updateButtons();
-        flashStatus.textContent = 'ошибка порта';
+        updateInterface();
+        flashMsg.textContent = 'ошибка порта';
       }
     }
 
-    async function performFlash() {
+    async function startFlashing() {
       if (!port || isFlashing) return;
       isFlashing = true;
-      updateButtons();
-      flashStatus.textContent = 'прошивка...';
+      updateInterface();
+      flashMsg.textContent = 'прошивка...';
       try {
         const response = await fetch('/firmware.bin');
         if (!response.ok) throw new Error('файл не найден');
@@ -229,25 +303,25 @@
           offset = end;
         }
         await writer.close();
-        flashStatus.textContent = 'успешно';
+        flashMsg.textContent = 'успешно';
       } catch (e) {
-        flashStatus.textContent = 'ошибка';
+        flashMsg.textContent = 'ошибка';
       } finally {
         isFlashing = false;
-        updateButtons();
+        updateInterface();
       }
     }
 
     connectBtn.addEventListener('click', toggleConnection);
-    flashBtn.addEventListener('click', performFlash);
+    flashBtn.addEventListener('click', startFlashing);
 
     if (!('serial' in navigator)) {
       connectBtn.disabled = true;
       flashBtn.disabled = true;
-      flashStatus.textContent = 'API недоступен';
+      flashMsg.textContent = 'API недоступен';
     }
 
-    updateButtons();
+    updateInterface();
   </script>
 </body>
 </html>
