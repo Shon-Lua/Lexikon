@@ -34,7 +34,6 @@
       flex-direction: column;
       overflow: hidden;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.03);
-      position: relative;
     }
     .top-panel {
       display: flex;
@@ -116,27 +115,27 @@
     }
     .gallery-block {
       flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem 2rem;
       background: #0d0d0d;
       overflow: hidden;
+      padding: 0;
     }
     .gallery-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1.2rem;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      height: 100%;
       width: 100%;
+      gap: 0;
     }
     .gallery-item {
       background: #161616;
       border: 1px solid #2c2c2c;
-      padding: 1rem 0.5rem;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       transition: background 0.2s;
+      padding: 0.6rem;
     }
     .gallery-item:hover {
       background: #1f1f1f;
@@ -152,13 +151,15 @@
       justify-content: center;
       font-size: 1.8rem;
       color: #666;
-      margin-bottom: 0.7rem;
+      margin-bottom: 0.4rem;
+      flex-shrink: 0;
     }
     .gallery-caption {
       font-size: 0.65rem;
       text-transform: uppercase;
       letter-spacing: 0.1rem;
       color: #999;
+      text-align: center;
     }
     .footer {
       border-top: 1px solid #282828;
@@ -170,6 +171,10 @@
       font-size: 0.7rem;
       color: #666;
       letter-spacing: 0.05rem;
+    }
+    .footer-links {
+      display: flex;
+      gap: 1.2rem;
     }
   </style>
 </head>
@@ -213,8 +218,11 @@
     </div>
 
     <div class="footer">
-      <span>Lexikon OS v2.4.1</span>
-      <span>серийный порт WebSerial</span>
+      <span>Copyright Lexikon</span>
+      <div class="footer-links">
+        <span>Политика конфиденциальности</span>
+        <span>GitHub</span>
+      </div>
     </div>
   </div>
 
