@@ -134,12 +134,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
+      transition: none;
       padding: 0.6rem;
-    }
-    .gallery-item:hover {
-      background: #1f1f1f;
-      border-color: #444;
     }
     .gallery-image {
       width: 100%;
@@ -169,12 +165,19 @@
       justify-content: space-between;
       align-items: center;
       font-size: 0.7rem;
-      color: #666;
       letter-spacing: 0.05rem;
     }
-    .footer-links {
-      display: flex;
-      gap: 1.2rem;
+    .footer-center {
+      text-align: center;
+      color: #888;
+    }
+    .footer-link {
+      color: #fff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .footer-link:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -218,11 +221,9 @@
     </div>
 
     <div class="footer">
-      <span>Copyright Lexikon</span>
-      <div class="footer-links">
-        <span>Политика конфиденциальности</span>
-        <span>GitHub</span>
-      </div>
+      <a href="#" class="footer-link">Политика конфиденциальности</a>
+      <div class="footer-center">Copyright &#169; 2026 Lexikon</div>
+      <a href="#" class="footer-link">GitHub</a>
     </div>
   </div>
 
