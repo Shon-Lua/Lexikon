@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lexikon OS — Прошивка</title>
+  <title>Lexikon OS — Firmware Flasher</title>
   <style>
     * {
       margin: 0;
@@ -75,6 +75,8 @@
       cursor: pointer;
       text-transform: uppercase;
       transition: 0.2s;
+      min-width: 110px;
+      text-align: center;
     }
     .btn:hover:not(:disabled) {
       border-color: #fff;
@@ -84,13 +86,6 @@
     .btn:disabled {
       opacity: 0.35;
       pointer-events: none;
-    }
-    .flash-status {
-      font-size: 0.7rem;
-      color: #888;
-      letter-spacing: 0.05rem;
-      white-space: nowrap;
-      margin-left: 0.2rem;
     }
     .about-block {
       padding: 1.5rem 2rem;
@@ -160,6 +155,80 @@
       text-align: center;
       color: #888;
     }
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0.2s, opacity 0.2s;
+    }
+    .modal-overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal-box {
+      background: #1a1a1a;
+      border: 1px solid #444;
+      padding: 2rem;
+      width: 90%;
+      max-width: 400px;
+      color: #ccc;
+    }
+    .modal-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1rem;
+      margin-bottom: 1.2rem;
+      color: #fff;
+    }
+    .modal-input {
+      width: 100%;
+      background: #111;
+      border: 1px solid #444;
+      padding: 0.6rem;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+      outline: none;
+    }
+    .modal-error {
+      font-size: 0.7rem;
+      color: #ff5555;
+      margin-bottom: 0.8rem;
+      display: none;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+    .modal-btn {
+      background: transparent;
+      border: 1px solid #555;
+      color: #ccc;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05rem;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: 0.2s;
+    }
+    .modal-btn:hover {
+      border-color: #fff;
+      color: #fff;
+      background: #222;
+    }
   </style>
 </head>
 <body>
@@ -169,13 +238,12 @@
         <span class="logo-icon">&#x2B21;</span> LEXIKON
       </div>
       <div class="action-btns">
-        <button class="btn" id="actionBtn">Подключить</button>
-        <span class="flash-status" id="flashStatus"></span>
+        <button class="btn" id="actionBtn">Connect</button>
       </div>
     </div>
 
     <div class="about-block">
-      Lexikon OS — минималистичная операционная система для микроконтроллеров ESP32. Поддерживает вытесняющую многозадачность, файловую систему LittleFS, встроенный веб-интерфейс настройки и OTA-обновления. Ядро оптимизировано для низкого энергопотребления и стабильной работы в IoT-сценариях.
+      Lexikon OS is a minimalistic operating system for ESP32 microcontrollers. It supports preemptive multitasking, LittleFS file system, built-in web configuration interface and OTA updates. The kernel is optimized for low power consumption and reliable operation in IoT scenarios.
     </div>
 
     <div class="gallery-block">
@@ -196,58 +264,88 @@
     </div>
 
     <div class="footer">
-      <a href="#" class="footer-link">Политика конфиденциальности</a>
+      <a href="#" class="footer-link">Privacy Policy</a>
       <div class="footer-center">&copy; 2026 Lexikon</div>
       <a href="#" class="footer-link">GitHub</a>
     </div>
   </div>
 
+  <div class="modal-overlay" id="keyModal">
+    <div class="modal-box">
+      <div class="modal-title">Enter Product Key</div>
+      <input type="text" class="modal-input" id="keyInput" placeholder="Product key">
+      <div class="modal-error" id="keyError">Key is required</div>
+      <div class="modal-buttons">
+        <button class="modal-btn" id="getKeyBtn">Get Key</button>
+        <button class="modal-btn" id="continueBtn">Continue</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const actionBtn = document.getElementById('actionBtn');
-    const flashStatus = document.getElementById('flashStatus');
+    const keyModal = document.getElementById('keyModal');
+    const keyInput = document.getElementById('keyInput');
+    const keyError = document.getElementById('keyError');
+    const getKeyBtn = document.getElementById('getKeyBtn');
+    const continueBtn = document.getElementById('continueBtn');
 
     let port = null;
     let isFlashing = false;
+    let progress = 0;
 
     function updateButton() {
-      const connected = port !== null;
-      actionBtn.textContent = connected ? 'Загрузить' : 'Подключить';
-      actionBtn.disabled = isFlashing;
+      if (isFlashing) {
+        actionBtn.textContent = `Flashing: ${progress}%`;
+        return;
+      }
+      actionBtn.textContent = port ? 'Flash' : 'Connect';
     }
 
-    async function toggleAction() {
-      if (isFlashing) return;
+    function openModal() {
+      keyInput.value = '';
+      keyError.style.display = 'none';
+      keyModal.classList.add('active');
+    }
 
+    function closeModal() {
+      keyModal.classList.remove('active');
+    }
+
+    async function toggleConnection() {
+      if (isFlashing) return;
       if (port) {
         try {
           await port.close();
         } catch (e) {}
         port = null;
-        flashStatus.textContent = '';
         updateButton();
         return;
       }
-
       try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-        flashStatus.textContent = '';
         updateButton();
       } catch (err) {
         port = null;
-        flashStatus.textContent = 'ошибка порта';
         updateButton();
       }
     }
 
-    async function performFlash() {
+    async function startFlash() {
       if (!port || isFlashing) return;
+      const key = keyInput.value.trim();
+      if (!key) {
+        keyError.style.display = 'block';
+        return;
+      }
+      closeModal();
       isFlashing = true;
+      progress = 0;
       updateButton();
-      flashStatus.textContent = 'прошивка...';
       try {
         const response = await fetch('/firmware.bin');
-        if (!response.ok) throw new Error('файл не найден');
+        if (!response.ok) throw new Error('Firmware file not found');
         const buffer = await response.arrayBuffer();
         const firmware = new Uint8Array(buffer);
         const writer = port.writable.getWriter();
@@ -257,28 +355,43 @@
           const end = Math.min(offset + chunkSize, firmware.length);
           await writer.write(firmware.slice(offset, end));
           offset = end;
+          progress = Math.round((offset / firmware.length) * 100);
+          actionBtn.textContent = `Flashing: ${progress}%`;
         }
         await writer.close();
-        flashStatus.textContent = 'успешно';
       } catch (e) {
-        flashStatus.textContent = 'ошибка';
+        console.error(e);
       } finally {
         isFlashing = false;
+        progress = 0;
         updateButton();
       }
     }
 
     actionBtn.addEventListener('click', () => {
-      if (port) {
-        performFlash();
-      } else {
-        toggleAction();
+      if (isFlashing) return;
+      if (!port) {
+        toggleConnection();
+        return;
+      }
+      openModal();
+    });
+
+    continueBtn.addEventListener('click', startFlash);
+
+    getKeyBtn.addEventListener('click', () => {
+      window.open('https://example.com/get-key', '_blank');
+    });
+
+    keyInput.addEventListener('input', () => {
+      if (keyInput.value.trim()) {
+        keyError.style.display = 'none';
       }
     });
 
     if (!('serial' in navigator)) {
       actionBtn.disabled = true;
-      flashStatus.textContent = 'API недоступен';
+      actionBtn.textContent = 'Unavailable';
     }
 
     updateButton();
