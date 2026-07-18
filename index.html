@@ -206,7 +206,7 @@
       text-decoration: underline;
     }
     .footer-center {
-      color: #fff;
+      color: #888;
     }
     .modal-overlay {
       position: fixed;
@@ -425,9 +425,7 @@
       </div>
     </div>
 
-    <div class="about-block">
-      Lexikon OS is a minimalistic operating system for ESP32 microcontrollers. It supports preemptive multitasking, LittleFS file system, built-in web configuration interface and OTA updates. The kernel is optimized for low power consumption and reliable operation in IoT scenarios.
-    </div>
+    <div class="about-block" id="aboutBlock">Loading description...</div>
 
     <div class="gallery-block">
       <div class="gallery-grid">
@@ -465,6 +463,7 @@
   </div>
 
   <script>
+    const aboutBlock = document.getElementById('aboutBlock');
     const connectBtn = document.getElementById('connectBtn');
     const actionsContainer = document.getElementById('actionsContainer');
     const keyModal = document.getElementById('keyModal');
@@ -478,7 +477,6 @@
     let port = null;
     let isFlashing = false;
     let progress = 0;
-    let progressInterval = null;
 
     function createButton(text, id, className = 'btn') {
       const btn = document.createElement('button');
@@ -650,7 +648,19 @@
       }
     });
 
+    async function loadAboutText() {
+      try {
+        const response = await fetch('/About.txt');
+        if (!response.ok) throw new Error('Not found');
+        const text = await response.text();
+        aboutBlock.textContent = text;
+      } catch (e) {
+        aboutBlock.textContent = 'Lexikon OS is a minimalistic operating system for ESP32 microcontrollers.';
+      }
+    }
+
     window.addEventListener('load', () => {
+      loadAboutText();
       setTimeout(() => {
         preloader.classList.add('fade-out');
         mainContainer.style.opacity = '1';
