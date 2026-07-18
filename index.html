@@ -40,6 +40,7 @@
       padding: 1.6rem 2.2rem;
       border-bottom: 1px solid #fff;
       background: #000;
+      flex-shrink: 0;
     }
     .logo {
       display: flex;
@@ -57,6 +58,7 @@
       color: #fff;
       text-transform: uppercase;
       line-height: 1;
+      flex-shrink: 0;
     }
     .logo-text {
       font-size: 2rem;
@@ -65,6 +67,7 @@
       color: #fff;
       text-transform: uppercase;
       line-height: 1;
+      white-space: nowrap;
     }
     .btn {
       background: transparent;
@@ -80,6 +83,8 @@
       transition: background 0.25s, color 0.25s;
       min-width: 115px;
       text-align: center;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .btn:hover:not(:disabled) {
       background: #fff;
@@ -100,11 +105,13 @@
       background: #000;
       letter-spacing: 0.02rem;
       font-weight: 350;
+      flex-shrink: 0;
     }
     .gallery-block {
       flex: 1;
       background: #000;
       overflow: hidden;
+      min-height: 0;
     }
     .gallery-grid {
       display: grid;
@@ -142,6 +149,7 @@
       align-items: center;
       font-size: 0.7rem;
       letter-spacing: 0.06rem;
+      flex-shrink: 0;
     }
     .footer-link {
       color: #ccc;
@@ -284,6 +292,7 @@
       0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
       40% { transform: scale(1.4); opacity: 1; }
     }
+
     @media (max-width: 600px) {
       body {
         padding: 0;
@@ -296,15 +305,40 @@
         border: none;
         border-top: 1px solid #fff;
         border-bottom: 1px solid #fff;
+        overflow-y: auto;
       }
       .top-panel {
-        padding: 1.2rem 1.2rem;
+        padding: 1rem 1rem;
+      }
+      .logo-box {
+        font-size: 2rem;
+        padding: 0.1rem 0.4rem;
+      }
+      .logo-text {
+        font-size: 1.5rem;
+        letter-spacing: 0.3rem;
       }
       .about-block {
-        padding: 1.2rem;
+        padding: 1rem;
+        font-size: 0.85rem;
       }
       .footer {
-        padding: 0.8rem 1.2rem;
+        padding: 0.7rem 1rem;
+        font-size: 0.65rem;
+      }
+      .btn {
+        font-size: 0.7rem;
+        padding: 0.45rem 1rem;
+        min-width: auto;
+      }
+    }
+    @media (max-width: 380px) {
+      .logo-text {
+        font-size: 1.2rem;
+        letter-spacing: 0.2rem;
+      }
+      .logo-box {
+        font-size: 1.8rem;
       }
     }
   </style>
