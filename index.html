@@ -157,16 +157,15 @@
       flex-shrink: 0;
     }
     .footer-link {
-      color: #ccc;
+      color: #fff;
       text-decoration: none;
       font-weight: 500;
     }
     .footer-link:hover {
-      color: #fff;
       text-decoration: underline;
     }
     .footer-center {
-      color: #888;
+      color: #fff;
     }
     .modal-overlay {
       position: fixed;
@@ -297,7 +296,16 @@
       0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
       40% { transform: scale(1.4); opacity: 1; }
     }
-
+    @media (hover: none) {
+      .btn:hover:not(:disabled) {
+        background: transparent;
+        color: #fff;
+      }
+      .modal-btn:hover {
+        background: transparent;
+        color: #fff;
+      }
+    }
     @media (max-width: 600px) {
       body {
         padding: 0;
@@ -473,7 +481,11 @@
 
     async function startFlash() {
       if (!port || isFlashing) return;
-      const key = keyInput.value.trim();
+
+      const enteredKey = keyInput.value.trim();
+      const storedKey = localStorage.getItem('lexikon_key') || '';
+      const key = enteredKey || storedKey;
+
       if (!key) {
         keyError.textContent = 'Key is required';
         keyError.style.display = 'block';
@@ -484,6 +496,7 @@
         keyError.style.display = 'block';
         return;
       }
+
       localStorage.setItem('lexikon_key', key);
       closeModal();
       isFlashing = true;
@@ -520,7 +533,12 @@
         toggleConnection();
         return;
       }
-      openModal();
+      const savedKey = localStorage.getItem('lexikon_key');
+      if (savedKey && isValidKey(savedKey)) {
+        startFlash();
+      } else {
+        openModal();
+      }
     });
 
     continueBtn.addEventListener('click', startFlash);
