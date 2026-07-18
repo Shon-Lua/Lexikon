@@ -592,7 +592,7 @@
       updateProgressUI();
 
       try {
-        const response = await fetch('/firmware.bin');
+        const response = await fetch('firmware.bin');
         if (!response.ok) throw new Error('Firmware file not found');
         const buffer = await response.arrayBuffer();
         const firmware = new Uint8Array(buffer);
@@ -649,12 +649,12 @@
 
     async function loadAboutText() {
       try {
-        const response = await fetch('/About.txt');
+        const response = await fetch('About.txt');
         if (!response.ok) throw new Error('Not found');
         const text = await response.text();
         aboutBlock.textContent = text;
       } catch (e) {
-        aboutBlock.textContent = 'Lexikon OS is a minimalistic operating system for ESP32 microcontrollers.';
+        aboutBlock.textContent = 'Lexikon OS is a minimalistic operating system for ESP32 microcontrollers. It supports preemptive multitasking, LittleFS file system, built-in web configuration interface and OTA updates. The kernel is optimized for low power consumption and reliable operation in IoT scenarios.';
       } finally {
         setTimeout(() => {
           preloader.classList.add('fade-out');
