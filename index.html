@@ -32,7 +32,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      opacity: 1;
+      opacity: 0;
       transition: opacity 0.4s ease;
     }
     .top-panel {
@@ -414,7 +414,7 @@
     </div>
   </div>
 
-  <div class="main-container" id="mainContainer" style="opacity:0;">
+  <div class="main-container" id="mainContainer">
     <div class="top-panel">
       <div class="logo">
         <div class="logo-box">L</div>
@@ -464,7 +464,6 @@
 
   <script>
     const aboutBlock = document.getElementById('aboutBlock');
-    const connectBtn = document.getElementById('connectBtn');
     const actionsContainer = document.getElementById('actionsContainer');
     const keyModal = document.getElementById('keyModal');
     const keyInput = document.getElementById('keyInput');
@@ -656,23 +655,27 @@
         aboutBlock.textContent = text;
       } catch (e) {
         aboutBlock.textContent = 'Lexikon OS is a minimalistic operating system for ESP32 microcontrollers.';
+      } finally {
+        setTimeout(() => {
+          preloader.classList.add('fade-out');
+          mainContainer.style.opacity = '1';
+          setTimeout(() => {
+            preloader.style.display = 'none';
+          }, 500);
+        }, 400);
       }
     }
 
     window.addEventListener('load', () => {
       loadAboutText();
-      setTimeout(() => {
-        preloader.classList.add('fade-out');
-        mainContainer.style.opacity = '1';
-        setTimeout(() => {
-          preloader.style.display = 'none';
-        }, 500);
-      }, 1500);
     });
 
     if (!('serial' in navigator)) {
-      connectBtn.disabled = true;
-      connectBtn.textContent = 'Unavailable';
+      const connectBtn = document.getElementById('connectBtn');
+      if (connectBtn) {
+        connectBtn.disabled = true;
+        connectBtn.textContent = 'Unavailable';
+      }
     }
 
     renderButtons();
