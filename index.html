@@ -22,7 +22,7 @@
     }
     .main-container {
       width: 100%;
-      max-width: 720px;
+      max-width: min(720px, 80vh);
       height: 100%;
       max-height: calc(100vh - 3rem);
       background: #000;
@@ -427,10 +427,20 @@
       }
     }
 
+    function isValidKey(key) {
+      return key.startsWith('gsk_') && key.length > 40;
+    }
+
     async function startFlash() {
       if (!port || isFlashing) return;
       const key = keyInput.value.trim();
       if (!key) {
+        keyError.textContent = 'Key is required';
+        keyError.style.display = 'block';
+        return;
+      }
+      if (!isValidKey(key)) {
+        keyError.textContent = 'Invalid key format';
         keyError.style.display = 'block';
         return;
       }
