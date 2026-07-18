@@ -71,6 +71,12 @@
       line-height: 1;
       white-space: nowrap;
     }
+    .actions {
+      display: flex;
+      gap: 0.8rem;
+      align-items: center;
+      flex-shrink: 0;
+    }
     .btn {
       background: transparent;
       border: 1px solid #fff;
@@ -82,11 +88,10 @@
       padding: 0.55rem 1.4rem;
       cursor: pointer;
       text-transform: uppercase;
-      transition: background 0.25s, color 0.25s;
+      transition: background 0.25s, color 0.25s, border-color 0.25s;
       min-width: 115px;
       text-align: center;
       white-space: nowrap;
-      flex-shrink: 0;
     }
     .btn:hover:not(:disabled) {
       background: #fff;
@@ -97,6 +102,42 @@
       pointer-events: none;
       border-color: #555;
       color: #777;
+    }
+    .btn.key-flash {
+      animation: keyFlashRed 0.3s ease-in-out 3;
+      border-color: #ff5555;
+      color: #ff5555;
+    }
+    @keyframes keyFlashRed {
+      0%, 100% { border-color: #fff; color: #fff; }
+      50% { border-color: #ff5555; color: #ff5555; }
+    }
+    .progress-bar {
+      width: 100%;
+      height: 32px;
+      border: 1px solid #fff;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: none;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #fff;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+    .progress-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1rem;
+      mix-blend-mode: difference;
     }
     .about-block {
       padding: 2rem 2.2rem;
@@ -345,6 +386,9 @@
         padding: 0.45rem 1rem;
         min-width: auto;
       }
+      .progress-bar {
+        height: 28px;
+      }
     }
     @media (max-width: 380px) {
       .logo-text {
@@ -376,7 +420,9 @@
         <div class="logo-box">L</div>
         <span class="logo-text">exikon</span>
       </div>
-      <button class="btn" id="actionBtn">Connect</button>
+      <div class="actions" id="actionsContainer">
+        <button class="btn" id="connectBtn">Connect</button>
+      </div>
     </div>
 
     <div class="about-block">
@@ -419,7 +465,8 @@
   </div>
 
   <script>
-    const actionBtn = document.getElementById('actionBtn');
+    const connectBtn = document.getElementById('connectBtn');
+    const actionsContainer = document.getElementById('actionsContainer');
     const keyModal = document.getElementById('keyModal');
     const keyInput = document.getElementById('keyInput');
     const keyError = document.getElementById('keyError');
@@ -431,13 +478,71 @@
     let port = null;
     let isFlashing = false;
     let progress = 0;
+    let progressInterval = null;
 
-    function updateButton() {
+    function createButton(text, id, className = 'btn') {
+      const btn = document.createElement('button');
+      btn.className = className;
+      btn.id = id;
+      btn.textContent = text;
+      return btn;
+    }
+
+    function renderButtons() {
+      actionsContainer.innerHTML = '';
       if (isFlashing) {
-        actionBtn.textContent = `Installing: ${progress}%`;
+        const progressBar = document.createElement('div');
+        progressBar.className = 'progress-bar';
+        progressBar.id = 'progressBar';
+        progressBar.style.display = 'flex';
+        const fill = document.createElement('div');
+        fill.className = 'progress-fill';
+        fill.id = 'progressFill';
+        fill.style.width = progress + '%';
+        const label = document.createElement('span');
+        label.className = 'progress-label';
+        label.id = 'progressLabel';
+        label.textContent = progress + '%';
+        progressBar.appendChild(fill);
+        progressBar.appendChild(label);
+        actionsContainer.appendChild(progressBar);
+      } else if (port) {
+        const installBtn = createButton('Install', 'installBtn');
+        const keyBtn = createButton('Key', 'keyBtn');
+        installBtn.addEventListener('click', onInstallClick);
+        keyBtn.addEventListener('click', onKeyClick);
+        actionsContainer.appendChild(installBtn);
+        actionsContainer.appendChild(keyBtn);
+      } else {
+        const btn = createButton('Connect', 'connectBtn');
+        btn.addEventListener('click', toggleConnection);
+        actionsContainer.appendChild(btn);
+      }
+    }
+
+    function updateProgressUI() {
+      const fill = document.getElementById('progressFill');
+      const label = document.getElementById('progressLabel');
+      if (fill) fill.style.width = progress + '%';
+      if (label) label.textContent = progress + '%';
+    }
+
+    function onInstallClick() {
+      if (isFlashing) return;
+      const savedKey = localStorage.getItem('lexikon_key');
+      if (!savedKey || !isValidKey(savedKey)) {
+        const keyBtn = document.getElementById('keyBtn');
+        if (keyBtn) {
+          keyBtn.classList.add('key-flash');
+          setTimeout(() => keyBtn.classList.remove('key-flash'), 2000);
+        }
         return;
       }
-      actionBtn.textContent = port ? 'Install' : 'Connect';
+      startFlash();
+    }
+
+    function onKeyClick() {
+      openModal();
     }
 
     function openModal() {
@@ -462,16 +567,16 @@
           await port.close();
         } catch (e) {}
         port = null;
-        updateButton();
+        renderButtons();
         return;
       }
       try {
         port = await navigator.serial.requestPort();
         await port.open({ baudRate: 115200 });
-        updateButton();
+        renderButtons();
       } catch (err) {
         port = null;
-        updateButton();
+        renderButtons();
       }
     }
 
@@ -481,27 +586,14 @@
 
     async function startFlash() {
       if (!port || isFlashing) return;
+      const savedKey = localStorage.getItem('lexikon_key');
+      if (!savedKey || !isValidKey(savedKey)) return;
 
-      const enteredKey = keyInput.value.trim();
-      const storedKey = localStorage.getItem('lexikon_key') || '';
-      const key = enteredKey || storedKey;
-
-      if (!key) {
-        keyError.textContent = 'Key is required';
-        keyError.style.display = 'block';
-        return;
-      }
-      if (!isValidKey(key)) {
-        keyError.textContent = 'Invalid key format';
-        keyError.style.display = 'block';
-        return;
-      }
-
-      localStorage.setItem('lexikon_key', key);
-      closeModal();
       isFlashing = true;
       progress = 0;
-      updateButton();
+      renderButtons();
+      updateProgressUI();
+
       try {
         const response = await fetch('/firmware.bin');
         if (!response.ok) throw new Error('Firmware file not found');
@@ -515,7 +607,7 @@
           await writer.write(firmware.slice(offset, end));
           offset = end;
           progress = Math.round((offset / firmware.length) * 100);
-          actionBtn.textContent = `Installing: ${progress}%`;
+          updateProgressUI();
         }
         await writer.close();
       } catch (e) {
@@ -523,25 +615,26 @@
       } finally {
         isFlashing = false;
         progress = 0;
-        updateButton();
+        renderButtons();
       }
     }
 
-    actionBtn.addEventListener('click', () => {
-      if (isFlashing) return;
-      if (!port) {
-        toggleConnection();
+    continueBtn.addEventListener('click', () => {
+      const key = keyInput.value.trim();
+      if (!key) {
+        keyError.textContent = 'Key is required';
+        keyError.style.display = 'block';
         return;
       }
-      const savedKey = localStorage.getItem('lexikon_key');
-      if (savedKey && isValidKey(savedKey)) {
-        startFlash();
-      } else {
-        openModal();
+      if (!isValidKey(key)) {
+        keyError.textContent = 'Invalid key format';
+        keyError.style.display = 'block';
+        return;
       }
+      localStorage.setItem('lexikon_key', key);
+      closeModal();
+      renderButtons();
     });
-
-    continueBtn.addEventListener('click', startFlash);
 
     getKeyBtn.addEventListener('click', () => {
       window.open('https://example.com/get-key', '_blank');
@@ -568,11 +661,11 @@
     });
 
     if (!('serial' in navigator)) {
-      actionBtn.disabled = true;
-      actionBtn.textContent = 'Unavailable';
+      connectBtn.disabled = true;
+      connectBtn.textContent = 'Unavailable';
     }
 
-    updateButton();
+    renderButtons();
   </script>
 </body>
 </html>
