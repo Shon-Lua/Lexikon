@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Lexikon OS — Firmware Flasher</title>
   <style>
     * {
@@ -40,19 +40,28 @@
     }
     .logo {
       display: flex;
-      align-items: center;
+      align-items: baseline;
+      gap: 0.5rem;
     }
     .logo-box {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       border: 1px solid #fff;
-      width: 2.8rem;
-      height: 2.8rem;
-      font-size: 1.6rem;
+      padding: 0.2rem 0.5rem;
+      font-size: 2.4rem;
       font-weight: 600;
       color: #fff;
       text-transform: uppercase;
+      line-height: 1;
+    }
+    .logo-text {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 0.5rem;
+      color: #fff;
+      text-transform: uppercase;
+      line-height: 1;
     }
     .btn {
       background: transparent;
@@ -225,6 +234,30 @@
       background: #fff;
       color: #000;
     }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 0;
+      }
+      .main-container {
+        max-width: 100%;
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border: none;
+        border-top: 1px solid #fff;
+        border-bottom: 1px solid #fff;
+      }
+      .top-panel {
+        padding: 1.2rem 1.2rem;
+      }
+      .about-block {
+        padding: 1.2rem;
+      }
+      .footer {
+        padding: 0.8rem 1.2rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -232,6 +265,7 @@
     <div class="top-panel">
       <div class="logo">
         <div class="logo-box">L</div>
+        <span class="logo-text">exikon</span>
       </div>
       <button class="btn" id="actionBtn">Connect</button>
     </div>
@@ -278,7 +312,7 @@
       <div class="modal-error" id="keyError">Key is required</div>
       <div class="modal-actions">
         <button class="modal-btn" id="getKeyBtn">Get Key</button>
-        <button class="modal-btn" id="continueBtn">Continue</button>
+        <button class="modal-btn" id="continueBtn">Enter</button>
       </div>
     </div>
   </div>
