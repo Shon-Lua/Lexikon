@@ -11,52 +11,48 @@
       box-sizing: border-box;
     }
     body {
-      background: #080808;
+      background: #000;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
       padding: 1.5rem;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 32px 32px;
     }
     .main-container {
       width: 100%;
       max-width: 720px;
       height: 100%;
       max-height: calc(100vh - 3rem);
-      background: #111;
-      border: 1px solid #333;
+      background: #000;
+      border: 1px solid #fff;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 12px 30px rgba(0,0,0,0.8);
     }
     .top-panel {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 1.6rem 2.2rem;
-      border-bottom: 1px solid #2c2c2c;
-      background: #0f0f0f;
+      border-bottom: 1px solid #fff;
+      background: #000;
     }
     .logo {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      font-size: 1.9rem;
+    }
+    .logo-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #fff;
+      width: 2.8rem;
+      height: 2.8rem;
+      font-size: 1.6rem;
       font-weight: 600;
-      letter-spacing: 0.5rem;
       color: #fff;
       text-transform: uppercase;
-    }
-    .logo-icon {
-      font-size: 1.8rem;
-      color: #ccc;
-      font-weight: 300;
     }
     .btn {
       background: transparent;
@@ -88,14 +84,14 @@
       font-size: 0.95rem;
       line-height: 1.8;
       color: #bbb;
-      border-bottom: 1px solid #2c2c2c;
-      background: #111;
+      border-bottom: 1px solid #fff;
+      background: #000;
       letter-spacing: 0.02rem;
       font-weight: 350;
     }
     .gallery-block {
       flex: 1;
-      background: #0d0d0d;
+      background: #000;
       overflow: hidden;
     }
     .gallery-grid {
@@ -106,8 +102,8 @@
       width: 100%;
     }
     .gallery-item {
-      border: 1px solid #2c2c2c;
-      background: #151515;
+      border: 1px solid #fff;
+      background: #000;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -120,12 +116,12 @@
       justify-content: center;
       font-size: 2.2rem;
       color: #666;
-      background: #1c1c1c;
+      background: #0a0a0a;
     }
     .footer {
-      border-top: 1px solid #2c2c2c;
+      border-top: 1px solid #fff;
       padding: 0.9rem 2.2rem;
-      background: #0f0f0f;
+      background: #000;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -164,13 +160,12 @@
       opacity: 1;
     }
     .modal-box {
-      background: #181818;
+      background: #000;
       border: 1px solid #fff;
       padding: 1.5rem;
       width: 340px;
       max-width: 90%;
       color: #ccc;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.9);
     }
     .modal-title {
       font-size: 0.9rem;
@@ -191,7 +186,7 @@
     }
     .modal-input {
       width: 100%;
-      background: #111;
+      background: #000;
       border: 1px solid #fff;
       padding: 0.5rem;
       color: #fff;
@@ -236,7 +231,7 @@
   <div class="main-container">
     <div class="top-panel">
       <div class="logo">
-        <span class="logo-icon">&#x2B21;</span> LEXIKON
+        <div class="logo-box">L</div>
       </div>
       <button class="btn" id="actionBtn">Connect</button>
     </div>
