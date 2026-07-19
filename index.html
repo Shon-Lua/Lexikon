@@ -76,6 +76,7 @@
       gap: 0.8rem;
       align-items: center;
       flex-shrink: 0;
+      min-width: 0;
     }
     .btn {
       background: transparent;
@@ -112,15 +113,19 @@
       0%, 100% { border-color: #fff; color: #fff; }
       50% { border-color: #ff5555; color: #ff5555; }
     }
+    .progress-wrapper {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
     .progress-bar {
       width: 100%;
-      height: 32px;
+      height: 40px;
       border: 1px solid #fff;
       background: #000;
       position: relative;
       overflow: hidden;
-      flex-shrink: 0;
-      display: none;
     }
     .progress-fill {
       height: 100%;
@@ -214,7 +219,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.88);
+      background: #000;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -292,6 +297,10 @@
     .modal-btn:hover {
       background: #fff;
       color: #000;
+    }
+    .modal-btn.center {
+      display: block;
+      margin: 0 auto;
     }
     .warning-title {
       text-align: center;
@@ -456,6 +465,7 @@
       </div>
       <input type="text" class="modal-input" id="keyInput" placeholder="gsk_XXXXXXXXXXXXXX">
       <div class="modal-error" id="keyError">Key is required</div>
+      <button class="modal-btn center" id="keyCancelBtn">Cancel</button>
       <div class="modal-actions">
         <button class="modal-btn" id="getKeyBtn">Get Key</button>
         <button class="modal-btn" id="continueBtn">Enter</button>
@@ -476,10 +486,10 @@
 
   <div class="modal-overlay" id="disconnectModal">
     <div class="modal-box">
-      <div class="modal-title">Connection Lost</div>
+      <div class="warning-title">Connection Lost</div>
       <div class="warning-text" id="disconnectMessage">The serial port connection was lost.</div>
       <div class="modal-actions" style="justify-content: center;">
-        <button class="modal-btn" id="disconnectConnectBtn">Connect</button>
+        <button class="modal-btn" id="disconnectReconnectBtn">Reconnect</button>
       </div>
     </div>
   </div>
@@ -504,9 +514,10 @@
     const keyError = document.getElementById('keyError');
     const continueBtn = document.getElementById('continueBtn');
     const getKeyBtn = document.getElementById('getKeyBtn');
+    const keyCancelBtn = document.getElementById('keyCancelBtn');
     const confirmCancelBtn = document.getElementById('confirmCancelBtn');
     const confirmContinueBtn = document.getElementById('confirmContinueBtn');
-    const disconnectConnectBtn = document.getElementById('disconnectConnectBtn');
+    const disconnectReconnectBtn = document.getElementById('disconnectReconnectBtn');
     const disconnectMessage = document.getElementById('disconnectMessage');
     const preloader = document.getElementById('preloader');
     const mainContainer = document.getElementById('mainContainer');
@@ -537,12 +548,12 @@
     function renderButtons() {
       actionsContainer.innerHTML = '';
       if (isFlashing) {
+        actionsContainer.style.flex = '1';
+        actionsContainer.style.marginLeft = '0';
         const wrapper = document.createElement('div');
-        wrapper.style.width = '100%';
+        wrapper.className = 'progress-wrapper';
         const progressBar = document.createElement('div');
         progressBar.className = 'progress-bar';
-        progressBar.id = 'progressBar';
-        progressBar.style.display = 'flex';
         const fill = document.createElement('div');
         fill.className = 'progress-fill';
         fill.id = 'progressFill';
@@ -559,17 +570,21 @@
         statusTextEl.id = 'statusText';
         wrapper.appendChild(statusTextEl);
         actionsContainer.appendChild(wrapper);
-      } else if (port) {
-        const installBtn = createButton('Install', 'installBtn');
-        const keyBtn = createButton('Key', 'keyBtn');
-        installBtn.addEventListener('click', onInstallClick);
-        keyBtn.addEventListener('click', onKeyClick);
-        actionsContainer.appendChild(installBtn);
-        actionsContainer.appendChild(keyBtn);
       } else {
-        const btn = createButton('Connect', 'connectBtn');
-        btn.addEventListener('click', toggleConnection);
-        actionsContainer.appendChild(btn);
+        actionsContainer.style.flex = '0';
+        actionsContainer.style.marginLeft = 'auto';
+        if (port) {
+          const installBtn = createButton('Install', 'installBtn');
+          const keyBtn = createButton('Key', 'keyBtn');
+          installBtn.addEventListener('click', onInstallClick);
+          keyBtn.addEventListener('click', onKeyClick);
+          actionsContainer.appendChild(installBtn);
+          actionsContainer.appendChild(keyBtn);
+        } else {
+          const btn = createButton('Connect', 'connectBtn');
+          btn.addEventListener('click', toggleConnection);
+          actionsContainer.appendChild(btn);
+        }
       }
     }
 
@@ -807,6 +822,8 @@
       renderButtons();
     });
 
+    keyCancelBtn.addEventListener('click', closeKeyModal);
+
     getKeyBtn.addEventListener('click', () => {
       window.open('https://example.com/get-key', '_blank');
     });
@@ -821,9 +838,9 @@
       startFlash();
     });
 
-    disconnectConnectBtn.addEventListener('click', () => {
+    disconnectReconnectBtn.addEventListener('click', () => {
       hideDisconnectModal();
-      renderButtons();
+      toggleConnection();
     });
 
     confirmModal.addEventListener('click', (e) => {
