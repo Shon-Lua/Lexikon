@@ -24,7 +24,7 @@
     }
     .main-container {
       width: 100%;
-      max-width: min(720px, 80vh);
+      max-width: 720px;
       height: 100%;
       max-height: calc(100% - 3rem);
       background: #000;
@@ -363,13 +363,13 @@
       color: #ccc;
       letter-spacing: 0.03rem;
     }
-    @media (max-width: 768px) {
-      .main-container, .preloader, .modal-overlay {
-        display: none !important;
-      }
-      .mobile-message {
-        display: flex;
-      }
+    body.is-mobile .main-container,
+    body.is-mobile .preloader,
+    body.is-mobile .modal-overlay {
+      display: none !important;
+    }
+    body.is-mobile .mobile-message {
+      display: flex;
     }
   </style>
 </head>
@@ -386,7 +386,7 @@
     </div>
   </div>
 
-  <div class="mobile-message">
+  <div class="mobile-message" id="mobileMessage">
     <div class="logo">
       <div class="logo-box">L</div>
       <span class="logo-text">exikon</span>
@@ -456,6 +456,15 @@
     let port = null;
     let isFlashing = false;
     let progress = 0;
+
+    function isMobileOS() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      return /android|iphone|ipad|ipod/i.test(ua);
+    }
+
+    if (isMobileOS()) {
+      document.body.classList.add('is-mobile');
+    }
 
     function createButton(text, id, className = 'btn') {
       const btn = document.createElement('button');
@@ -647,8 +656,9 @@
     }
 
     window.addEventListener('load', () => {
-      if (window.innerWidth <= 768) return;
-      loadAboutText();
+      if (!isMobileOS()) {
+        loadAboutText();
+      }
     });
 
     if (!('serial' in navigator)) {
@@ -659,7 +669,9 @@
       }
     }
 
-    renderButtons();
+    if (!isMobileOS()) {
+      renderButtons();
+    }
   </script>
 </body>
 </html>
