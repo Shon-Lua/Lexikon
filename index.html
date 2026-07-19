@@ -112,6 +112,15 @@
       0%, 100% { border-color: #fff; color: #fff; }
       50% { border-color: #ff5555; color: #ff5555; }
     }
+    .port-info {
+      font-size: 0.7rem;
+      color: #aaa;
+      margin-right: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
     .progress-bar {
       width: 100%;
       height: 32px;
@@ -564,6 +573,10 @@
         const keyBtn = createButton('Key', 'keyBtn');
         installBtn.addEventListener('click', onInstallClick);
         keyBtn.addEventListener('click', onKeyClick);
+        const portInfoSpan = document.createElement('span');
+        portInfoSpan.className = 'port-info';
+        portInfoSpan.textContent = portName;
+        actionsContainer.appendChild(portInfoSpan);
         actionsContainer.appendChild(installBtn);
         actionsContainer.appendChild(keyBtn);
       } else {
