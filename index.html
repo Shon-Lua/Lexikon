@@ -688,6 +688,9 @@
       updateProgressUI();
       setStatusText('Initializing...');
 
+      let transport = null;
+      let esptool = null;
+
       try {
         const [bootResp, partResp, appResp] = await Promise.all([
           fetch('bootloader.bin'),
@@ -703,15 +706,24 @@
         const appData = new Uint8Array(await appResp.arrayBuffer());
 
         setStatusText('Connecting to ESP32...');
-        const transport = new Transport(port);
-        const esptool = new ESPLoader({
+        transport = new Transport(port);
+        esptool = new ESPLoader({
           transport: transport,
           baudrate: 921600,
           terminal: {
             clean: () => {},
             writeLine: (msg) => {
               console.log(msg);
-              updateProgressFromLog(msg);
+              if (typeof msg === 'string') {
+                const match = msg.match(/\((\d+)\s*%\)/);
+                if (match) {
+                  const p = parseInt(match[1], 10);
+                  if (!isNaN(p) && p >= 0 && p <= 100) {
+                    progress = p;
+                    updateProgressUI();
+                  }
+                }
+              }
             },
             write: (msg) => {
               console.log(msg);
@@ -753,22 +765,13 @@
         updateProgressUI();
       } finally {
         isFlashing = false;
+        if (esptool && esptool.transport) {
+          try { await esptool.transport.disconnect(); } catch (e) {}
+        }
         setTimeout(() => {
           if (port) renderButtons();
           else handleDisconnect();
         }, 1500);
-      }
-    }
-
-    function updateProgressFromLog(message) {
-      if (typeof message !== 'string') return;
-      const match = message.match(/\((\d+)\s*%\)/);
-      if (match) {
-        const p = parseInt(match[1], 10);
-        if (!isNaN(p) && p >= 0 && p <= 100) {
-          progress = p;
-          updateProgressUI();
-        }
       }
     }
 
