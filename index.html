@@ -337,66 +337,38 @@
       0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
       40% { transform: scale(1.4); opacity: 1; }
     }
-    @media (hover: none) {
-      .btn:hover:not(:disabled) {
-        background: transparent;
-        color: #fff;
-      }
-      .modal-btn:hover {
-        background: transparent;
-        color: #fff;
-      }
+    .mobile-message {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      color: #fff;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      z-index: 10000;
     }
-    @media (max-width: 600px) {
-      body {
-        padding: 0;
-      }
-      .main-container {
-        max-width: 100%;
-        width: 100%;
-        height: 100%;
-        max-height: none;
-        border: none;
-        overflow-y: auto;
-      }
-      .top-panel {
-        padding: 1rem 1rem;
-        border-bottom: none;
-      }
-      .logo-box {
-        font-size: 2rem;
-        padding: 0.1rem 0.4rem;
-      }
-      .logo-text {
-        font-size: 1.5rem;
-        letter-spacing: 0.3rem;
-      }
-      .about-block {
-        padding: 1rem;
-        font-size: 0.85rem;
-        border-bottom: none;
-      }
-      .footer {
-        padding: 0.7rem 1rem;
-        font-size: 0.65rem;
-        border-top: none;
-      }
-      .btn {
-        font-size: 0.7rem;
-        padding: 0.45rem 1rem;
-        min-width: auto;
-      }
-      .progress-bar {
-        height: 28px;
-      }
+    .mobile-message .logo {
+      margin-bottom: 2rem;
     }
-    @media (max-width: 380px) {
-      .logo-text {
-        font-size: 1.2rem;
-        letter-spacing: 0.2rem;
+    .mobile-message p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      max-width: 300px;
+      color: #ccc;
+      letter-spacing: 0.03rem;
+    }
+    @media (max-width: 768px) {
+      .main-container, .preloader, .modal-overlay {
+        display: none !important;
       }
-      .logo-box {
-        font-size: 1.8rem;
+      .mobile-message {
+        display: flex;
       }
     }
   </style>
@@ -412,6 +384,14 @@
       <span class="dot"></span>
       <span class="dot"></span>
     </div>
+  </div>
+
+  <div class="mobile-message">
+    <div class="logo">
+      <div class="logo-box">L</div>
+      <span class="logo-text">exikon</span>
+    </div>
+    <p>This application is not supported on mobile devices. Please switch to Windows, Linux or macOS.</p>
   </div>
 
   <div class="main-container" id="mainContainer">
@@ -667,6 +647,7 @@
     }
 
     window.addEventListener('load', () => {
+      if (window.innerWidth <= 768) return;
       loadAboutText();
     });
 
