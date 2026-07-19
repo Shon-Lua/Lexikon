@@ -385,6 +385,13 @@
     body.is-mobile .mobile-message {
       display: flex;
     }
+    .status-text {
+      font-size: 0.7rem;
+      color: #aaa;
+      margin-top: 0.4rem;
+      text-align: center;
+      min-height: 1.2rem;
+    }
   </style>
 </head>
 <body>
@@ -477,7 +484,17 @@
     </div>
   </div>
 
-  <script>
+  <script type="importmap">
+    {
+      "imports": {
+        "esptool-js": "https://unpkg.com/esptool-js@0.5.4/bundle.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import { ESPLoader, Transport } from 'esptool-js';
+
     const aboutBlock = document.getElementById('aboutBlock');
     const actionsContainer = document.getElementById('actionsContainer');
     const keyModal = document.getElementById('keyModal');
@@ -498,6 +515,7 @@
     let isFlashing = false;
     let progress = 0;
     let portName = 'Unknown device';
+    let statusTextEl = null;
 
     function isMobileOS() {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -519,6 +537,8 @@
     function renderButtons() {
       actionsContainer.innerHTML = '';
       if (isFlashing) {
+        const wrapper = document.createElement('div');
+        wrapper.style.width = '100%';
         const progressBar = document.createElement('div');
         progressBar.className = 'progress-bar';
         progressBar.id = 'progressBar';
@@ -533,7 +553,12 @@
         label.textContent = progress + '%';
         progressBar.appendChild(fill);
         progressBar.appendChild(label);
-        actionsContainer.appendChild(progressBar);
+        wrapper.appendChild(progressBar);
+        statusTextEl = document.createElement('div');
+        statusTextEl.className = 'status-text';
+        statusTextEl.id = 'statusText';
+        wrapper.appendChild(statusTextEl);
+        actionsContainer.appendChild(wrapper);
       } else if (port) {
         const installBtn = createButton('Install', 'installBtn');
         const keyBtn = createButton('Key', 'keyBtn');
@@ -553,6 +578,10 @@
       const label = document.getElementById('progressLabel');
       if (fill) fill.style.width = progress + '%';
       if (label) label.textContent = progress + '%';
+    }
+
+    function setStatusText(text) {
+      if (statusTextEl) statusTextEl.textContent = text;
     }
 
     function onInstallClick() {
@@ -603,9 +632,7 @@
 
     async function handleDisconnect() {
       if (port) {
-        try {
-          await port.close();
-        } catch (e) {}
+        try { await port.close(); } catch (e) {}
         port = null;
       }
       isFlashing = false;
@@ -617,9 +644,7 @@
     async function toggleConnection() {
       if (isFlashing) return;
       if (port) {
-        try {
-          await port.close();
-        } catch (e) {}
+        try { await port.close(); } catch (e) {}
         port = null;
         renderButtons();
         return;
@@ -642,6 +667,16 @@
       return key.startsWith('gsk_') && key.length > 40;
     }
 
+    function uint8ToBinaryString(u8) {
+      let result = '';
+      const chunkSize = 0x8000;
+      for (let i = 0; i < u8.length; i += chunkSize) {
+        const chunk = u8.subarray(i, i + chunkSize);
+        result += String.fromCharCode.apply(null, chunk);
+      }
+      return result;
+    }
+
     async function startFlash() {
       if (!port || isFlashing) return;
       const savedKey = localStorage.getItem('lexikon_key');
@@ -651,29 +686,104 @@
       progress = 0;
       renderButtons();
       updateProgressUI();
+      setStatusText('Initializing...');
 
       try {
-        const response = await fetch('firmware.bin');
-        if (!response.ok) throw new Error('Firmware file not found');
-        const buffer = await response.arrayBuffer();
-        const firmware = new Uint8Array(buffer);
-        const writer = port.writable.getWriter();
-        const chunkSize = 1024;
-        let offset = 0;
-        while (offset < firmware.length) {
-          const end = Math.min(offset + chunkSize, firmware.length);
-          await writer.write(firmware.slice(offset, end));
-          offset = end;
-          progress = Math.round((offset / firmware.length) * 100);
-          updateProgressUI();
+        const [bootResp, partResp, appResp] = await Promise.all([
+          fetch('bootloader.bin'),
+          fetch('partitions.bin'),
+          fetch('Lexikon.bin')
+        ]);
+        if (!bootResp.ok) throw new Error('bootloader.bin not found');
+        if (!partResp.ok) throw new Error('partitions.bin not found');
+        if (!appResp.ok) throw new Error('Lexikon.bin not found');
+
+        const bootloaderData = new Uint8Array(await bootResp.arrayBuffer());
+        const partitionsData = new Uint8Array(await partResp.arrayBuffer());
+        const appData = new Uint8Array(await appResp.arrayBuffer());
+
+        setStatusText('Connecting to ESP32...');
+        const transport = new Transport(port);
+        const esptool = new ESPLoader({
+          transport: transport,
+          baudrate: 921600,
+          terminal: {
+            clean: () => {},
+            writeLine: (msg) => {
+              console.log(msg);
+              updateProgressFromLog(msg);
+            },
+            write: (msg) => {
+              console.log(msg);
+            }
+          }
+        });
+
+        await esptool.main();
+        setStatusText('Erasing flash...');
+        await esptool.eraseFlash();
+
+        const fileArray = [];
+        if (bootloaderData.length > 0) {
+          fileArray.push({ data: uint8ToBinaryString(bootloaderData), address: 0x1000 });
         }
-        await writer.close();
+        if (partitionsData.length > 0) {
+          fileArray.push({ data: uint8ToBinaryString(partitionsData), address: 0x8000 });
+        }
+        fileArray.push({ data: uint8ToBinaryString(appData), address: 0x10000 });
+
+        setStatusText('Writing firmware...');
+        await esptool.writeFlash({
+          fileArray: fileArray,
+          flashSize: "keep",
+          compress: true,
+          eraseAll: false
+        });
+
+        progress = 100;
+        updateProgressUI();
+        setStatusText('Flashing complete. Rebooting...');
+        await hardResetDevice(transport);
+        await esptool.after();
+        setStatusText('Done. Device should now run Lexikon OS.');
       } catch (e) {
         console.error(e);
+        setStatusText('Error: ' + e.message);
+        progress = 0;
+        updateProgressUI();
       } finally {
         isFlashing = false;
-        progress = 0;
-        renderButtons();
+        setTimeout(() => {
+          if (port) renderButtons();
+          else handleDisconnect();
+        }, 1500);
+      }
+    }
+
+    function updateProgressFromLog(message) {
+      if (typeof message !== 'string') return;
+      const match = message.match(/\((\d+)\s*%\)/);
+      if (match) {
+        const p = parseInt(match[1], 10);
+        if (!isNaN(p) && p >= 0 && p <= 100) {
+          progress = p;
+          updateProgressUI();
+        }
+      }
+    }
+
+    async function hardResetDevice(transport) {
+      if (transport && typeof transport.setSignals === 'function') {
+        try {
+          await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
+          await new Promise(r => setTimeout(r, 50));
+          await transport.setSignals({ dataTerminalReady: false, requestToSend: true });
+          await new Promise(r => setTimeout(r, 50));
+          await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
+          await new Promise(r => setTimeout(r, 100));
+        } catch (e) {
+          console.warn('Reset failed:', e);
+        }
       }
     }
 
@@ -734,7 +844,7 @@
         const text = await response.text();
         aboutBlock.textContent = text;
       } catch (e) {
-        aboutBlock.textContent = 'Lexikon OS is a minimalistic operating system for ESP32 microcontrollers. It supports preemptive multitasking, LittleFS file system, built-in web configuration interface and OTA updates. The kernel is optimized for low power consumption and reliable operation in IoT scenarios.';
+        aboutBlock.textContent = 'Lexikon OS is a minimalistic operating system for ESP32 microcontrollers.';
       } finally {
         setTimeout(() => {
           preloader.classList.add('fade-out');
