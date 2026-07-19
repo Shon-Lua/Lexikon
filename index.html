@@ -114,6 +114,7 @@
     }
     .progress-bar {
       width: 100%;
+      min-width: 400px;
       height: 32px;
       border: 1px solid #fff;
       background: #000;
@@ -272,8 +273,8 @@
     }
     .modal-actions {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
       margin-top: 0.8rem;
     }
     .modal-btn {
@@ -458,10 +459,8 @@
       <div class="modal-error" id="keyError">Key is required</div>
       <div class="modal-actions">
         <button class="modal-btn" id="getKeyBtn">Get Key</button>
-        <button class="modal-btn" id="continueBtn">Enter</button>
-      </div>
-      <div style="text-align: center; margin-top: 0.8rem;">
         <button class="modal-btn" id="cancelKeyBtn">Cancel</button>
+        <button class="modal-btn" id="continueBtn">Enter</button>
       </div>
     </div>
   </div>
@@ -479,9 +478,9 @@
 
   <div class="modal-overlay" id="disconnectModal">
     <div class="modal-box">
-      <div class="modal-title" style="justify-content: center;">Connection Lost</div>
+      <div class="modal-title" style="justify-content:center;">Connection Lost</div>
       <div class="warning-text" id="disconnectMessage">The serial port connection was lost.</div>
-      <div class="modal-actions" style="justify-content: center;">
+      <div class="modal-actions">
         <button class="modal-btn" id="disconnectReconnectBtn">Reconnect</button>
       </div>
     </div>
@@ -563,17 +562,21 @@
         statusTextEl.id = 'statusText';
         wrapper.appendChild(statusTextEl);
         actionsContainer.appendChild(wrapper);
-      } else if (port) {
-        const installBtn = createButton('Install', 'installBtn');
-        const keyBtn = createButton('Key', 'keyBtn');
-        installBtn.addEventListener('click', onInstallClick);
-        keyBtn.addEventListener('click', onKeyClick);
-        actionsContainer.appendChild(installBtn);
-        actionsContainer.appendChild(keyBtn);
+        actionsContainer.style.flex = '1';
       } else {
-        const btn = createButton('Connect', 'connectBtn');
-        btn.addEventListener('click', toggleConnection);
-        actionsContainer.appendChild(btn);
+        actionsContainer.style.flex = '';
+        if (port) {
+          const installBtn = createButton('Install', 'installBtn');
+          const keyBtn = createButton('Key', 'keyBtn');
+          installBtn.addEventListener('click', onInstallClick);
+          keyBtn.addEventListener('click', onKeyClick);
+          actionsContainer.appendChild(installBtn);
+          actionsContainer.appendChild(keyBtn);
+        } else {
+          const btn = createButton('Connect', 'connectBtn');
+          btn.addEventListener('click', toggleConnection);
+          actionsContainer.appendChild(btn);
+        }
       }
     }
 
@@ -645,20 +648,6 @@
       renderButtons();
     }
 
-    async function requestAndStorePort() {
-      try {
-        const newPort = await navigator.serial.requestPort();
-        port = newPort;
-        const info = port.getInfo();
-        portName = info.productName || `USB Device (${info.usbVendorId?.toString(16)}:${info.usbProductId?.toString(16)})`;
-        port.ondisconnect = handleDisconnect;
-        return true;
-      } catch (err) {
-        port = null;
-        return false;
-      }
-    }
-
     async function toggleConnection() {
       if (isFlashing) return;
       if (port) {
@@ -667,8 +656,18 @@
         renderButtons();
         return;
       }
-      const success = await requestAndStorePort();
-      renderButtons();
+      try {
+        const newPort = await navigator.serial.requestPort();
+        await newPort.open({ baudRate: 115200 });
+        port = newPort;
+        const info = port.getInfo();
+        portName = info.productName || `USB Device (${info.usbVendorId?.toString(16)}:${info.usbProductId?.toString(16)})`;
+        port.ondisconnect = handleDisconnect;
+        renderButtons();
+      } catch (err) {
+        port = null;
+        renderButtons();
+      }
     }
 
     function isValidKey(key) {
@@ -700,6 +699,7 @@
       let esptool = null;
 
       try {
+        await port.close();
         await port.open({ baudRate: 115200 });
 
         const [bootResp, partResp, appResp] = await Promise.all([
@@ -778,11 +778,9 @@
         if (esptool && esptool.transport) {
           try { await esptool.transport.disconnect(); } catch (e) {}
         }
-        if (port) {
-          try { await port.close(); } catch (e) {}
-        }
         setTimeout(() => {
-          renderButtons();
+          if (port) renderButtons();
+          else handleDisconnect();
         }, 1500);
       }
     }
@@ -819,11 +817,13 @@
       renderButtons();
     });
 
+    cancelKeyBtn.addEventListener('click', () => {
+      closeKeyModal();
+    });
+
     getKeyBtn.addEventListener('click', () => {
       window.open('https://example.com/get-key', '_blank');
     });
-
-    cancelKeyBtn.addEventListener('click', closeKeyModal);
 
     keyModal.addEventListener('click', (e) => {
       if (e.target === keyModal) closeKeyModal();
@@ -835,15 +835,9 @@
       startFlash();
     });
 
-    disconnectReconnectBtn.addEventListener('click', async () => {
+    disconnectReconnectBtn.addEventListener('click', () => {
       hideDisconnectModal();
-      const success = await requestAndStorePort();
-      if (success) {
-        renderButtons();
-      } else {
-        port = null;
-        renderButtons();
-      }
+      toggleConnection();
     });
 
     confirmModal.addEventListener('click', (e) => {
