@@ -246,7 +246,6 @@
     function renderButtons() {
       actionsContainer.innerHTML = '';
       if (isFlashing) {
-        const wrapper = document.createElement('div'); wrapper.style.width = '100%';
         const progressBar = document.createElement('div');
         progressBar.className = 'progress-bar'; progressBar.id = 'progressBar'; progressBar.style.display = 'flex';
         const fill = document.createElement('div');
@@ -254,8 +253,7 @@
         const label = document.createElement('span');
         label.className = 'progress-label'; label.id = 'progressLabel'; label.textContent = progress + '%';
         progressBar.appendChild(fill); progressBar.appendChild(label);
-        wrapper.appendChild(progressBar);
-        actionsContainer.appendChild(wrapper);
+        actionsContainer.appendChild(progressBar);
       } else if (port) {
         const installBtn = createButton('Install', 'installBtn');
         const keyBtn = createButton('Key', 'keyBtn');
@@ -310,6 +308,19 @@
       showDisconnectModal(); renderButtons();
     }
 
+    async function enterBootloaderMode(serialPort) {
+      if (!serialPort || typeof serialPort.setSignals !== 'function') return;
+      try {
+        await serialPort.setSignals({ dataTerminalReady: false, requestToSend: true });
+        await new Promise(r => setTimeout(r, 100));
+        await serialPort.setSignals({ dataTerminalReady: true, requestToSend: false });
+        await new Promise(r => setTimeout(r, 100));
+        await serialPort.setSignals({ dataTerminalReady: false, requestToSend: false });
+      } catch(e) {
+        console.warn('Bootloader entry failed:', e);
+      }
+    }
+
     async function toggleConnection() {
       if (isFlashing) return;
       if (port) {
@@ -323,6 +334,7 @@
         const info = port.getInfo();
         portName = info.productName || `USB Device (${info.usbVendorId?.toString(16)}:${info.usbProductId?.toString(16)})`;
         port.ondisconnect = handleDisconnect;
+        await enterBootloaderMode(port);
         renderButtons();
       } catch (err) {
         port = null; renderButtons();
@@ -337,21 +349,6 @@
         result += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
       }
       return result;
-    }
-
-    async function enterBootloader(transport) {
-      if (transport && typeof transport.setSignals === 'function') {
-        try {
-          await transport.setSignals({ dataTerminalReady: false, requestToSend: true });
-          await new Promise(r => setTimeout(r, 100));
-          await transport.setSignals({ dataTerminalReady: true, requestToSend: false });
-          await new Promise(r => setTimeout(r, 50));
-          await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
-          await new Promise(r => setTimeout(r, 100));
-        } catch(e) {
-          console.warn('Bootloader entry failed:', e);
-        }
-      }
     }
 
     async function hardResetDevice(transport) {
@@ -390,19 +387,19 @@
         const appData = new Uint8Array(await appResp.arrayBuffer());
 
         transport = new Transport(port);
-        await enterBootloader(transport);
-
         esptool = new ESPLoader({
           transport, baudrate: 921600,
           terminal: {
             clean: () => {},
             writeLine: (msg) => {
-              const match = String(msg).match(/\((\d+)\s*%\)/);
-              if (match) { progress = parseInt(match[1],10); updateProgressUI(); }
+              const text = String(msg !== undefined ? msg : "");
+              const match = text.match(/\((\d+)\s*%\)/);
+              if (match) { progress = parseInt(match[1], 10); updateProgressUI(); }
             },
             write: (msg) => {
-              const match = String(msg).match(/\((\d+)\s*%\)/);
-              if (match) { progress = parseInt(match[1],10); updateProgressUI(); }
+              const text = String(msg !== undefined ? msg : "");
+              const match = text.match(/\((\d+)\s*%\)/);
+              if (match) { progress = parseInt(match[1], 10); updateProgressUI(); }
             }
           }
         });
