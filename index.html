@@ -46,6 +46,11 @@
     }
     .btn:hover:not(:disabled) { background:#fff; color:#000; }
     .btn:disabled { opacity:0.3; pointer-events:none; border-color:#555; color:#777; }
+    .btn.key-flash { animation:keyFlashRed 0.3s ease-in-out 3; border-color:#ff5555; color:#ff5555; }
+    @keyframes keyFlashRed {
+      0%,100% { border-color:#fff; color:#fff; }
+      50% { border-color:#ff5555; color:#ff5555; }
+    }
     .progress-bar {
       width:100%; height:32px; border:1px solid #fff; background:#000;
       position:relative; overflow:hidden; flex-shrink:0; display:none;
@@ -56,18 +61,9 @@
       color:#fff; font-size:0.8rem; font-weight:600; letter-spacing:0.1rem; mix-blend-mode:difference;
     }
     .about-block {
-      padding:1rem 2.2rem; overflow-y:auto; flex:1;
-      border-bottom:1px solid #fff; background:#000;
+      padding:2rem 2.2rem; font-size:0.95rem; line-height:1.8; color:#bbb;
+      border-bottom:1px solid #fff; background:#000; letter-spacing:0.02rem; font-weight:350; flex-shrink:0;
     }
-    .fw-list-container { display:flex; flex-direction:column; gap:0.5rem; }
-    .fw-item {
-      border:1px solid #444; padding:0.8rem 1rem; cursor:pointer;
-      transition:border-color 0.2s; background:#000; color:#ccc;
-    }
-    .fw-item:hover { border-color:#fff; }
-    .fw-item.active { border-color:#fff; background:#111; }
-    .fw-name { font-weight:600; color:#fff; margin-bottom:0.25rem; }
-    .fw-desc { font-size:0.8rem; color:#888; }
     .gallery-block { flex:1; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0; }
     .gallery-grid {
       width:100%; aspect-ratio:1/1; max-height:100%;
@@ -96,6 +92,7 @@
       font-size:0.9rem; text-transform:uppercase; letter-spacing:0.12rem; margin-bottom:1rem;
       color:#fff; font-weight:600; display:flex; align-items:center; gap:0.5rem;
     }
+    .key-icon svg { width:18px; height:18px; stroke:#fff; fill:none; }
     .modal-input {
       width:100%; background:#000; border:1px solid #fff; padding:0.5rem;
       color:#fff; font-family:inherit; font-size:0.85rem; margin-bottom:0.4rem; outline:none; letter-spacing:0.03rem;
@@ -139,7 +136,6 @@
     body.is-mobile .main-container, body.is-mobile .preloader, body.is-mobile .modal-overlay { display:none!important; }
     body.is-mobile .mobile-message { display:flex; }
     .status-text { font-size:0.7rem; color:#aaa; margin-top:0.4rem; text-align:center; min-height:1.2rem; }
-    .selected-fw { font-size:0.7rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
   </style>
 </head>
 <body>
@@ -159,9 +155,7 @@
         <button class="btn" id="connectBtn">Connect</button>
       </div>
     </div>
-    <div class="about-block" id="firmwareListBlock">
-      <div class="fw-list-container" id="fwListContainer"></div>
-    </div>
+    <div class="about-block" id="aboutBlock">Loading description...</div>
     <div class="gallery-block">
       <div class="gallery-grid">
         <div class="gallery-item"><div class="gallery-image">&#x25A3;</div></div>
@@ -174,6 +168,18 @@
       <a href="#" class="footer-link">Privacy Policy</a>
       <div class="footer-center">&copy; 2026 Lexikon</div>
       <a href="#" class="footer-link">GitHub</a>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="keyModal">
+    <div class="modal-box">
+      <div class="modal-title"><span class="key-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span> Enter Key</div>
+      <input type="text" class="modal-input" id="keyInput" placeholder="gsk_XXXXXXXXXXXXXX">
+      <div class="modal-error" id="keyError">Key is required</div>
+      <div class="modal-actions">
+        <button class="modal-btn" id="getKeyBtn">Get Key</button>
+        <button class="modal-btn" id="continueBtn">Enter</button>
+      </div>
     </div>
   </div>
 
@@ -205,11 +211,15 @@
   <script type="module">
     import { ESPLoader, Transport } from 'esptool-js';
 
-    const firmwareListBlock = document.getElementById('firmwareListBlock');
-    const fwListContainer = document.getElementById('fwListContainer');
+    const aboutBlock = document.getElementById('aboutBlock');
     const actionsContainer = document.getElementById('actionsContainer');
+    const keyModal = document.getElementById('keyModal');
     const confirmModal = document.getElementById('confirmModal');
     const disconnectModal = document.getElementById('disconnectModal');
+    const keyInput = document.getElementById('keyInput');
+    const keyError = document.getElementById('keyError');
+    const continueBtn = document.getElementById('continueBtn');
+    const getKeyBtn = document.getElementById('getKeyBtn');
     const confirmCancelBtn = document.getElementById('confirmCancelBtn');
     const confirmContinueBtn = document.getElementById('confirmContinueBtn');
     const disconnectConnectBtn = document.getElementById('disconnectConnectBtn');
@@ -222,13 +232,6 @@
     let progress = 0;
     let portName = 'Unknown device';
     let statusTextEl = null;
-    let firmwareListLoaded = false;
-    let currentBootloaderData = null;
-    let currentPartitionsData = null;
-    let currentAppData = null;
-    let currentFirmwareName = null;
-    let currentFirmwareCacheKey = null;
-    const firmwareCache = new Map();
 
     function isMobileOS() {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -259,18 +262,12 @@
         wrapper.appendChild(statusTextEl);
         actionsContainer.appendChild(wrapper);
       } else if (port) {
-        const flashBtn = createButton('Flash', 'flashActionBtn');
-        flashBtn.disabled = !currentAppData;
-        flashBtn.addEventListener('click', onFlashClick);
-        const selectedLabel = document.createElement('span');
-        selectedLabel.className = 'selected-fw';
-        selectedLabel.id = 'selectedFwLabel';
-        selectedLabel.textContent = currentFirmwareName || 'No firmware selected';
-        actionsContainer.appendChild(flashBtn);
-        actionsContainer.appendChild(selectedLabel);
-        if (!firmwareListLoaded) {
-          loadFirmwareList();
-        }
+        const installBtn = createButton('Install', 'installBtn');
+        const keyBtn = createButton('Key', 'keyBtn');
+        installBtn.addEventListener('click', onInstallClick);
+        keyBtn.addEventListener('click', onKeyClick);
+        actionsContainer.appendChild(installBtn);
+        actionsContainer.appendChild(keyBtn);
       } else {
         const btn = createButton('Connect', 'connectBtn');
         btn.addEventListener('click', toggleConnection);
@@ -286,12 +283,25 @@
     }
     function setStatusText(text) { if (statusTextEl) statusTextEl.textContent = text; }
 
-    function onFlashClick() {
+    function onInstallClick() {
       if (isFlashing) return;
-      if (!currentAppData) return;
+      const savedKey = localStorage.getItem('lexikon_key');
+      if (!savedKey || !isValidKey(savedKey)) {
+        const keyBtn = document.getElementById('keyBtn');
+        if (keyBtn) { keyBtn.classList.add('key-flash'); setTimeout(() => keyBtn.classList.remove('key-flash'), 2000); }
+        return;
+      }
       confirmModal.classList.add('active');
     }
+    function onKeyClick() { openKeyModal(); }
 
+    function openKeyModal() {
+      const savedKey = localStorage.getItem('lexikon_key');
+      keyInput.value = savedKey || '';
+      keyError.style.display = 'none';
+      keyModal.classList.add('active');
+    }
+    function closeKeyModal() { keyModal.classList.remove('active'); }
     function closeConfirmModal() { confirmModal.classList.remove('active'); }
 
     function showDisconnectModal() {
@@ -325,49 +335,96 @@
       }
     }
 
+    function isValidKey(key) { return key.startsWith('gsk_') && key.length > 40; }
+
     function uint8ToBinaryString(u8) {
       let result = '';
-      const chunkSize = 0x8000;
-      for (let i = 0; i < u8.length; i += chunkSize) {
-        result += String.fromCharCode.apply(null, u8.subarray(i, i + chunkSize));
+      for (let i = 0; i < u8.length; i += 0x8000) {
+        result += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
       }
       return result;
     }
 
+    async function hardResetDevice(transport) {
+      setStatusText('Attempting hardware reset...');
+      if (transport && typeof transport.setSignals === 'function') {
+        try {
+          await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
+          await new Promise(r => setTimeout(r, 50));
+          await transport.setSignals({ dataTerminalReady: false, requestToSend: true });
+          await new Promise(r => setTimeout(r, 50));
+          await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
+          await new Promise(r => setTimeout(r, 100));
+          setStatusText('Reset sequence completed.');
+        } catch(e) {
+          setStatusText('Reset failed: ' + e.message);
+        }
+      } else {
+        setStatusText('Signal control not supported. Please reset manually.');
+      }
+    }
+
     async function startFlash() {
       if (!port || isFlashing) return;
-      if (!currentAppData) return;
+      const savedKey = localStorage.getItem('lexikon_key');
+      if (!savedKey || !isValidKey(savedKey)) return;
+
       isFlashing = true; progress = 0; renderButtons(); updateProgressUI(); setStatusText('Initializing...');
       let transport = null; let esptool = null;
+
       try {
+        const [bootResp, partResp, appResp] = await Promise.all([
+          fetch('bootloader.bin'), fetch('partitions.bin'), fetch('Lexikon.bin')
+        ]);
+        if (!bootResp.ok) throw new Error('bootloader.bin not found');
+        if (!partResp.ok) throw new Error('partitions.bin not found');
+        if (!appResp.ok) throw new Error('Lexikon.bin not found');
+
+        const bootloaderData = new Uint8Array(await bootResp.arrayBuffer());
+        const partitionsData = new Uint8Array(await partResp.arrayBuffer());
+        const appData = new Uint8Array(await appResp.arrayBuffer());
+
+        setStatusText('Connecting to ESP32...');
         transport = new Transport(port);
         esptool = new ESPLoader({
           transport, baudrate: 921600,
           terminal: {
             clean: () => {},
             writeLine: (msg) => {
-              console.log(msg);
-              if (typeof msg === 'string') {
-                const match = msg.match(/\((\d+)\s*%\)/);
-                if (match) { progress = parseInt(match[1],10); updateProgressUI(); }
+              const text = String(msg !== undefined ? msg : "");
+              const match = text.match(/\((\d+)\s*%\)/);
+              if (match) {
+                progress = parseInt(match[1], 10);
+                updateProgressUI();
               }
+              setStatusText(text);
             },
-            write: (msg) => console.log(msg)
+            write: (msg) => {
+              const text = String(msg !== undefined ? msg : "");
+              const match = text.match(/\((\d+)\s*%\)/);
+              if (match) {
+                progress = parseInt(match[1], 10);
+                updateProgressUI();
+              }
+              setStatusText(text);
+            }
           }
         });
         await esptool.main();
         setStatusText('Erasing flash...'); await esptool.eraseFlash();
+
         const fileArray = [];
-        if (currentBootloaderData && currentBootloaderData.length) fileArray.push({ data: uint8ToBinaryString(currentBootloaderData), address: 0x1000 });
-        if (currentPartitionsData && currentPartitionsData.length) fileArray.push({ data: uint8ToBinaryString(currentPartitionsData), address: 0x8000 });
-        fileArray.push({ data: uint8ToBinaryString(currentAppData), address: 0x10000 });
+        if (bootloaderData.length) fileArray.push({ data: uint8ToBinaryString(bootloaderData), address: 0x1000 });
+        if (partitionsData.length) fileArray.push({ data: uint8ToBinaryString(partitionsData), address: 0x8000 });
+        fileArray.push({ data: uint8ToBinaryString(appData), address: 0x10000 });
+
         setStatusText('Writing firmware...');
         await esptool.writeFlash({ fileArray, flashSize: "keep", compress: true, eraseAll: false });
         progress = 100; updateProgressUI();
         setStatusText('Flashing complete. Rebooting...');
         await hardResetDevice(transport);
         await esptool.after();
-        setStatusText('Done. Device should now run the firmware.');
+        setStatusText('Done. Device should now run Lexikon OS.');
       } catch (e) {
         console.error(e); setStatusText('Error: ' + e.message);
         progress = 0; updateProgressUI();
@@ -378,148 +435,35 @@
       }
     }
 
-    async function hardResetDevice(transport) {
-      if (transport && typeof transport.setSignals === 'function') {
-        try {
-          await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
-          await new Promise(r => setTimeout(r, 50));
-          await transport.setSignals({ dataTerminalReady: false, requestToSend: true });
-          await new Promise(r => setTimeout(r, 50));
-          await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
-          await new Promise(r => setTimeout(r, 100));
-        } catch(e) { console.warn('Reset failed:', e); }
-      }
-    }
-
-    async function loadAndCacheFirmware(manifestPath) {
-      if (firmwareCache.has(manifestPath)) return firmwareCache.get(manifestPath);
-      try {
-        const manifestResp = await fetch(manifestPath);
-        if (!manifestResp.ok) throw new Error(`HTTP ${manifestResp.status}`);
-        const manifest = await manifestResp.json();
-        const basePath = manifest.basePath || manifestPath.replace(/\/manifest\.json$/, '/');
-        let description = manifest.description || 'No description';
-        try {
-          const descFile = manifest.descriptionFile || 'desc.txt';
-          const descResp = await fetch(basePath + descFile);
-          if (descResp.ok) description = await descResp.text();
-        } catch(e) {}
-        let bootloaderData = null, partitionsData = null, appData = null;
-        if (manifest.type === 'full') {
-          const [boot, part, app] = await Promise.all([
-            fetch(basePath + manifest.files.bootloader).then(r => { if(!r.ok) throw new Error('bootloader missing'); return r.arrayBuffer(); }),
-            fetch(basePath + manifest.files.partitions).then(r => { if(!r.ok) throw new Error('partitions missing'); return r.arrayBuffer(); }),
-            fetch(basePath + manifest.files.app).then(r => { if(!r.ok) throw new Error('app missing'); return r.arrayBuffer(); })
-          ]);
-          bootloaderData = new Uint8Array(boot);
-          partitionsData = new Uint8Array(part);
-          appData = new Uint8Array(app);
-        } else if (manifest.type === 'single') {
-          const app = await fetch(basePath + manifest.file).then(r => { if(!r.ok) throw new Error('firmware missing'); return r.arrayBuffer(); });
-          appData = new Uint8Array(app);
-        } else {
-          throw new Error(`Unknown manifest type: ${manifest.type}`);
-        }
-        const entry = { manifest, bootloaderData, partitionsData, appData, description: description.trim() };
-        firmwareCache.set(manifestPath, entry);
-        return entry;
-      } catch(e) {
-        console.error('Failed to load manifest', manifestPath, e);
-        return null;
-      }
-    }
-
-    async function selectFirmware(manifestPath) {
-      const cached = firmwareCache.get(manifestPath);
-      if (!cached) return false;
-      currentBootloaderData = cached.bootloaderData;
-      currentPartitionsData = cached.partitionsData;
-      currentAppData = cached.appData;
-      currentFirmwareName = cached.manifest.name;
-      currentFirmwareCacheKey = manifestPath;
-      document.querySelectorAll('.fw-item').forEach(el => {
-        if (el.dataset.manifest === manifestPath) el.classList.add('active');
-        else el.classList.remove('active');
-      });
-      const label = document.getElementById('selectedFwLabel');
-      if (label) label.textContent = currentFirmwareName;
-      const flashBtn = document.getElementById('flashActionBtn');
-      if (flashBtn) flashBtn.disabled = false;
-      return true;
-    }
-
-    async function buildFirmwareList() {
-      fwListContainer.innerHTML = '';
-      try {
-        const resp = await fetch('projects.json');
-        if (!resp.ok) throw new Error('projects.json not found');
-        const data = await resp.json();
-        const folders = data.folders || {};
-        const folderNames = Object.values(folders);
-        if (folderNames.length === 0) {
-          fwListContainer.innerHTML = '<div class="fw-item" style="cursor:default"><div class="fw-name">No firmware found</div><div class="fw-desc">Check projects.json</div></div>';
-          return;
-        }
-        for (const folderName of folderNames) {
-          const manifestPath = `Lib/${folderName}/manifest.json`;
-          const div = document.createElement('div');
-          div.className = 'fw-item';
-          div.dataset.manifest = manifestPath;
-          div.innerHTML = `<div class="fw-name">${folderName}</div><div class="fw-desc">Loading description...</div>`;
-          fwListContainer.appendChild(div);
-        }
-        const items = document.querySelectorAll('.fw-item[data-manifest]');
-        const loadPromises = [];
-        items.forEach(item => {
-          const mp = item.dataset.manifest;
-          loadPromises.push((async () => {
-            const entry = await loadAndCacheFirmware(mp);
-            if (entry) {
-              const descEl = item.querySelector('.fw-desc');
-              if (descEl) descEl.textContent = entry.description;
-              const nameEl = item.querySelector('.fw-name');
-              if (nameEl && entry.manifest.name) nameEl.textContent = entry.manifest.name;
-            } else {
-              item.querySelector('.fw-desc').textContent = 'Failed to load';
-            }
-          })());
-        });
-        await Promise.all(loadPromises);
-        items.forEach(item => {
-          item.addEventListener('click', () => {
-            if (isFlashing) return;
-            selectFirmware(item.dataset.manifest);
-          });
-        });
-        firmwareListLoaded = true;
-      } catch(e) {
-        fwListContainer.innerHTML = '<div class="fw-item" style="cursor:default"><div class="fw-name">Error</div><div class="fw-desc">Could not load firmware list</div></div>';
-      }
-    }
-
-    function loadFirmwareList() {
-      if (!firmwareListLoaded) buildFirmwareList();
-    }
-
-    confirmContinueBtn.addEventListener('click', () => { closeConfirmModal(); startFlash(); });
-    confirmCancelBtn.addEventListener('click', closeConfirmModal);
-    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirmModal(); });
-    disconnectConnectBtn.addEventListener('click', () => { hideDisconnectModal(); toggleConnection(); });
-    disconnectModal.addEventListener('click', (e) => { if (e.target === disconnectModal) hideDisconnectModal(); });
-
-    window.addEventListener('load', () => {
-      if (!isMobileOS()) {
-        setTimeout(() => {
-          preloader.classList.add('fade-out');
-          mainContainer.style.opacity = '1';
-          setTimeout(() => { preloader.style.display = 'none'; }, 500);
-        }, 400);
-      }
+    continueBtn.addEventListener('click', () => {
+      const key = keyInput.value.trim();
+      if (!key) { keyError.textContent = 'Key is required'; keyError.style.display = 'block'; return; }
+      if (!isValidKey(key)) { keyError.textContent = 'Invalid key format'; keyError.style.display = 'block'; return; }
+      localStorage.setItem('lexikon_key', key);
+      closeKeyModal(); renderButtons();
     });
-    if (!('serial' in navigator)) {
-      const btn = document.getElementById('connectBtn');
-      if(btn) { btn.disabled = true; btn.textContent = 'Unavailable'; }
+    getKeyBtn.addEventListener('click', () => window.open('https://example.com/get-key', '_blank'));
+    keyModal.addEventListener('click', (e) => { if (e.target === keyModal) closeKeyModal(); });
+    confirmCancelBtn.addEventListener('click', closeConfirmModal);
+    confirmContinueBtn.addEventListener('click', () => { closeConfirmModal(); startFlash(); });
+    disconnectConnectBtn.addEventListener('click', () => { hideDisconnectModal(); renderButtons(); });
+    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirmModal(); });
+    disconnectModal.addEventListener('click', (e) => { if (e.target === disconnectModal) hideDisconnectModal(); });
+    keyInput.addEventListener('input', () => { if (keyInput.value.trim()) keyError.style.display = 'none'; });
+
+    async function loadAboutText() {
+      try {
+        const response = await fetch('About.txt');
+        if (!response.ok) throw new Error('Not found');
+        aboutBlock.textContent = await response.text();
+      } catch(e) {
+        aboutBlock.textContent = 'Lexikon OS is a minimalistic operating system for ESP32 microcontrollers.';
+      } finally {
+        setTimeout(() => { preloader.classList.add('fade-out'); mainContainer.style.opacity = '1'; setTimeout(() => { preloader.style.display = 'none'; }, 500); }, 400);
+      }
     }
+    window.addEventListener('load', () => { if (!isMobileOS()) loadAboutText(); });
+    if (!('serial' in navigator)) { const btn = document.getElementById('connectBtn'); if(btn) { btn.disabled = true; btn.textContent = 'Unavailable'; } }
     if (!isMobileOS()) renderButtons();
   </script>
 </body>
