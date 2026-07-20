@@ -5,438 +5,157 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Lexikon OS — Firmware Flasher</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    html, body {
-      height: 100%;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; }
     body {
-      background: #000;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      overflow: hidden;
+      background:#000;
+      font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+      display:flex; align-items:center; justify-content:center;
+      padding:1.5rem; overflow:hidden;
     }
     .main-container {
-      width: 100%;
-      max-width: 720px;
-      height: 100%;
-      max-height: calc(100% - 3rem);
-      background: #000;
-      border: 1px solid #fff;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity 0.4s ease;
+      width:100%; max-width:720px; height:100%; max-height:calc(100% - 3rem);
+      background:#000; border:1px solid #fff;
+      display:flex; flex-direction:column; overflow:hidden;
+      opacity:0; transition:opacity 0.4s ease;
     }
     .top-panel {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.6rem 2.2rem;
-      border-bottom: 1px solid #fff;
-      background: #000;
-      flex-shrink: 0;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1.6rem 2.2rem; border-bottom:1px solid #fff;
+      background:#000; flex-shrink:0;
     }
-    .logo {
-      display: flex;
-      align-items: baseline;
-      gap: 0.5rem;
-    }
+    .logo { display:flex; align-items:baseline; gap:0.5rem; }
     .logo-box {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #fff;
-      padding: 0.2rem 0.5rem;
-      font-size: 2.4rem;
-      font-weight: 600;
-      color: #fff;
-      text-transform: uppercase;
-      line-height: 1;
-      flex-shrink: 0;
+      display:inline-flex; align-items:center; justify-content:center;
+      border:1px solid #fff; padding:0.2rem 0.5rem;
+      font-size:2.4rem; font-weight:600; color:#fff;
+      text-transform:uppercase; line-height:1; flex-shrink:0;
     }
     .logo-text {
-      font-size: 2rem;
-      font-weight: 600;
-      letter-spacing: 0.5rem;
-      color: #fff;
-      text-transform: uppercase;
-      line-height: 1;
-      white-space: nowrap;
+      font-size:2rem; font-weight:600; letter-spacing:0.5rem;
+      color:#fff; text-transform:uppercase; line-height:1; white-space:nowrap;
     }
-    .actions {
-      display: flex;
-      gap: 0.8rem;
-      align-items: center;
-      flex-shrink: 0;
-    }
+    .actions { display:flex; gap:0.8rem; align-items:center; flex-shrink:0; }
     .btn {
-      background: transparent;
-      border: 1px solid #fff;
-      color: #fff;
-      font-family: inherit;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.12rem;
-      padding: 0.55rem 1.4rem;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: background 0.25s, color 0.25s, border-color 0.25s;
-      min-width: 115px;
-      text-align: center;
-      white-space: nowrap;
+      background:transparent; border:1px solid #fff; color:#fff;
+      font-family:inherit; font-size:0.8rem; font-weight:600;
+      letter-spacing:0.12rem; padding:0.55rem 1.4rem;
+      cursor:pointer; text-transform:uppercase;
+      transition:background 0.25s, color 0.25s;
+      min-width:115px; text-align:center; white-space:nowrap;
     }
-    .btn:hover:not(:disabled) {
-      background: #fff;
-      color: #000;
-    }
-    .btn:disabled {
-      opacity: 0.3;
-      pointer-events: none;
-      border-color: #555;
-      color: #777;
-    }
-    .btn.key-flash {
-      animation: keyFlashRed 0.3s ease-in-out 3;
-      border-color: #ff5555;
-      color: #ff5555;
-    }
+    .btn:hover:not(:disabled) { background:#fff; color:#000; }
+    .btn:disabled { opacity:0.3; pointer-events:none; border-color:#555; color:#777; }
+    .btn.key-flash { animation:keyFlashRed 0.3s ease-in-out 3; border-color:#ff5555; color:#ff5555; }
     @keyframes keyFlashRed {
-      0%, 100% { border-color: #fff; color: #fff; }
-      50% { border-color: #ff5555; color: #ff5555; }
-    }
-    .port-info {
-      font-size: 0.7rem;
-      color: #aaa;
-      margin-right: 1rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 200px;
+      0%,100% { border-color:#fff; color:#fff; }
+      50% { border-color:#ff5555; color:#ff5555; }
     }
     .progress-bar {
-      width: 100%;
-      height: 32px;
-      border: 1px solid #fff;
-      background: #000;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
-      display: none;
+      width:100%; height:32px; border:1px solid #fff; background:#000;
+      position:relative; overflow:hidden; flex-shrink:0; display:none;
     }
-    .progress-fill {
-      height: 100%;
-      background: #fff;
-      width: 0%;
-      transition: width 0.1s linear;
-    }
+    .progress-fill { height:100%; background:#fff; width:0%; transition:width 0.1s linear; }
     .progress-label {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #fff;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.1rem;
-      mix-blend-mode: difference;
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      color:#fff; font-size:0.8rem; font-weight:600; letter-spacing:0.1rem; mix-blend-mode:difference;
     }
     .about-block {
-      padding: 2rem 2.2rem;
-      font-size: 0.95rem;
-      line-height: 1.8;
-      color: #bbb;
-      border-bottom: 1px solid #fff;
-      background: #000;
-      letter-spacing: 0.02rem;
-      font-weight: 350;
-      flex-shrink: 0;
+      padding:2rem 2.2rem; font-size:0.95rem; line-height:1.8; color:#bbb;
+      border-bottom:1px solid #fff; background:#000; letter-spacing:0.02rem; font-weight:350; flex-shrink:0;
     }
-    .gallery-block {
-      flex: 1;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      padding: 0;
-    }
+    .gallery-block { flex:1; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:0; }
     .gallery-grid {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      max-height: 100%;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
+      width:100%; aspect-ratio:1/1; max-height:100%;
+      display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;
     }
-    .gallery-item {
-      border: 1px solid #fff;
-      background: #0a0a0a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .gallery-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.2rem;
-      color: #666;
-      background: #0a0a0a;
-    }
+    .gallery-item { border:1px solid #fff; background:#0a0a0a; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .gallery-image { width:100%; height:100%; object-fit:cover; display:flex; align-items:center; justify-content:center; font-size:2.2rem; color:#666; background:#0a0a0a; }
     .footer {
-      border-top: 1px solid #fff;
-      padding: 0.9rem 2.2rem;
-      background: #000;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.7rem;
-      letter-spacing: 0.06rem;
-      flex-shrink: 0;
+      border-top:1px solid #fff; padding:0.9rem 2.2rem; background:#000;
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:0.7rem; letter-spacing:0.06rem; flex-shrink:0;
     }
-    .footer-link {
-      color: #fff;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .footer-link:hover {
-      text-decoration: underline;
-    }
-    .footer-center {
-      color: #888;
-    }
+    .footer-link { color:#fff; text-decoration:none; font-weight:500; }
+    .footer-link:hover { text-decoration:underline; }
+    .footer-center { color:#888; }
     .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.88);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      visibility: hidden;
-      opacity: 0;
-      transition: visibility 0.25s, opacity 0.25s;
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.88); display:flex; align-items:center; justify-content:center;
+      z-index:1000; visibility:hidden; opacity:0; transition:visibility 0.25s, opacity 0.25s;
     }
-    .modal-overlay.active {
-      visibility: visible;
-      opacity: 1;
-    }
+    .modal-overlay.active { visibility:visible; opacity:1; }
     .modal-box {
-      background: #000;
-      border: 1px solid #fff;
-      padding: 1.5rem;
-      width: 340px;
-      max-width: 90%;
-      color: #ccc;
+      background:#000; border:1px solid #fff; padding:1.5rem; width:340px; max-width:90%; color:#ccc;
     }
     .modal-title {
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12rem;
-      margin-bottom: 1rem;
-      color: #fff;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size:0.9rem; text-transform:uppercase; letter-spacing:0.12rem; margin-bottom:1rem;
+      color:#fff; font-weight:600; display:flex; align-items:center; gap:0.5rem;
     }
-    .key-icon svg {
-      width: 18px;
-      height: 18px;
-      stroke: #fff;
-      fill: none;
-    }
+    .key-icon svg { width:18px; height:18px; stroke:#fff; fill:none; }
     .modal-input {
-      width: 100%;
-      background: #000;
-      border: 1px solid #fff;
-      padding: 0.5rem;
-      color: #fff;
-      font-family: inherit;
-      font-size: 0.85rem;
-      margin-bottom: 0.4rem;
-      outline: none;
-      letter-spacing: 0.03rem;
+      width:100%; background:#000; border:1px solid #fff; padding:0.5rem;
+      color:#fff; font-family:inherit; font-size:0.85rem; margin-bottom:0.4rem; outline:none; letter-spacing:0.03rem;
     }
-    .modal-error {
-      font-size: 0.7rem;
-      color: #ff5555;
-      margin-bottom: 0.6rem;
-      display: none;
-    }
-    .modal-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 0.8rem;
-    }
+    .modal-error { font-size:0.7rem; color:#ff5555; margin-bottom:0.6rem; display:none; }
+    .modal-actions { display:flex; justify-content:space-between; align-items:center; margin-top:0.8rem; }
     .modal-btn {
-      background: transparent;
-      border: 1px solid #fff;
-      color: #fff;
-      font-family: inherit;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.06rem;
-      padding: 0.4rem 1rem;
-      cursor: pointer;
-      text-transform: uppercase;
-      transition: background 0.25s, color 0.25s;
+      background:transparent; border:1px solid #fff; color:#fff;
+      font-family:inherit; font-size:0.7rem; font-weight:600; letter-spacing:0.06rem;
+      padding:0.4rem 1rem; cursor:pointer; text-transform:uppercase; transition:background 0.25s, color 0.25s;
     }
-    .modal-btn:hover {
-      background: #fff;
-      color: #000;
-    }
-    .warning-title {
-      text-align: center;
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: #fff;
-    }
-    .warning-text {
-      text-align: center;
-      font-size: 0.85rem;
-      margin-bottom: 1.5rem;
-      color: #ccc;
-      line-height: 1.5;
-    }
+    .modal-btn:hover { background:#fff; color:#000; }
+    .warning-title { text-align:center; font-size:1.2rem; font-weight:700; margin-bottom:1rem; color:#fff; }
+    .warning-text { text-align:center; font-size:0.85rem; margin-bottom:1.5rem; color:#ccc; line-height:1.5; }
     .preloader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      transition: opacity 0.5s ease;
-      opacity: 1;
+      position:fixed; top:0; left:0; width:100%; height:100%; background:#000;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      z-index:9999; transition:opacity 0.5s ease; opacity:1;
     }
-    .preloader.fade-out {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .preloader-logo {
-      display: flex;
-      align-items: baseline;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-    }
-    .dots {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-    }
+    .preloader.fade-out { opacity:0; pointer-events:none; }
+    .preloader-logo { display:flex; align-items:baseline; gap:0.5rem; margin-bottom:2rem; }
+    .dots { display:flex; gap:0.5rem; justify-content:center; }
     .dot {
-      width: 8px;
-      height: 8px;
-      background: #fff;
-      border-radius: 50%;
-      animation: dotPulse 1.4s infinite ease-in-out;
+      width:8px; height:8px; background:#fff; border-radius:50%;
+      animation:dotPulse 1.4s infinite ease-in-out;
     }
-    .dot:nth-child(1) { animation-delay: 0s; }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .dot:nth-child(1) { animation-delay:0s; }
+    .dot:nth-child(2) { animation-delay:0.2s; }
+    .dot:nth-child(3) { animation-delay:0.4s; }
     @keyframes dotPulse {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40% { transform: scale(1.4); opacity: 1; }
+      0%,80%,100% { transform:scale(0.6); opacity:0.4; }
+      40% { transform:scale(1.4); opacity:1; }
     }
     .mobile-message {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      color: #fff;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 2rem;
-      z-index: 10000;
+      display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:#000; color:#fff; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:2rem; z-index:10000;
     }
-    .mobile-message .logo {
-      margin-bottom: 2rem;
-    }
-    .mobile-message p {
-      font-size: 0.9rem;
-      line-height: 1.6;
-      max-width: 300px;
-      color: #ccc;
-      letter-spacing: 0.03rem;
-    }
-    body.is-mobile .main-container,
-    body.is-mobile .preloader,
-    body.is-mobile .modal-overlay {
-      display: none !important;
-    }
-    body.is-mobile .mobile-message {
-      display: flex;
-    }
-    .status-text {
-      font-size: 0.7rem;
-      color: #aaa;
-      margin-top: 0.4rem;
-      text-align: center;
-      min-height: 1.2rem;
-    }
+    .mobile-message .logo { margin-bottom:2rem; }
+    .mobile-message p { font-size:0.9rem; line-height:1.6; max-width:300px; color:#ccc; letter-spacing:0.03rem; }
+    body.is-mobile .main-container, body.is-mobile .preloader, body.is-mobile .modal-overlay { display:none!important; }
+    body.is-mobile .mobile-message { display:flex; }
+    .status-text { font-size:0.7rem; color:#aaa; margin-top:0.4rem; text-align:center; min-height:1.2rem; }
   </style>
 </head>
 <body>
   <div class="preloader" id="preloader">
-    <div class="preloader-logo">
-      <div class="logo-box">L</div>
-      <span class="logo-text">exikon</span>
-    </div>
-    <div class="dots">
-      <span class="dot"></span>
-      <span class="dot"></span>
-      <span class="dot"></span>
-    </div>
+    <div class="preloader-logo"><div class="logo-box">L</div><span class="logo-text">exikon</span></div>
+    <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
   </div>
-
   <div class="mobile-message" id="mobileMessage">
-    <div class="logo">
-      <div class="logo-box">L</div>
-      <span class="logo-text">exikon</span>
-    </div>
+    <div class="logo"><div class="logo-box">L</div><span class="logo-text">exikon</span></div>
     <p>This application is not supported on mobile devices. Please switch to Windows, Linux or macOS.</p>
   </div>
 
   <div class="main-container" id="mainContainer">
     <div class="top-panel">
-      <div class="logo">
-        <div class="logo-box">L</div>
-        <span class="logo-text">exikon</span>
-      </div>
+      <div class="logo"><div class="logo-box">L</div><span class="logo-text">exikon</span></div>
       <div class="actions" id="actionsContainer">
         <button class="btn" id="connectBtn">Connect</button>
       </div>
     </div>
-
     <div class="about-block" id="aboutBlock">Loading description...</div>
-
     <div class="gallery-block">
       <div class="gallery-grid">
         <div class="gallery-item"><div class="gallery-image">&#x25A3;</div></div>
@@ -445,7 +164,6 @@
         <div class="gallery-item"><div class="gallery-image">&#x25A3;</div></div>
       </div>
     </div>
-
     <div class="footer">
       <a href="#" class="footer-link">Privacy Policy</a>
       <div class="footer-center">&copy; 2026 Lexikon</div>
@@ -455,14 +173,7 @@
 
   <div class="modal-overlay" id="keyModal">
     <div class="modal-box">
-      <div class="modal-title">
-        <span class="key-icon">
-          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-          </svg>
-        </span>
-        Enter Key
-      </div>
+      <div class="modal-title"><span class="key-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span> Enter Key</div>
       <input type="text" class="modal-input" id="keyInput" placeholder="gsk_XXXXXXXXXXXXXX">
       <div class="modal-error" id="keyError">Key is required</div>
       <div class="modal-actions">
@@ -487,18 +198,14 @@
     <div class="modal-box">
       <div class="modal-title">Connection Lost</div>
       <div class="warning-text" id="disconnectMessage">The serial port connection was lost.</div>
-      <div class="modal-actions" style="justify-content: center;">
+      <div class="modal-actions" style="justify-content:center;">
         <button class="modal-btn" id="disconnectConnectBtn">Connect</button>
       </div>
     </div>
   </div>
 
   <script type="importmap">
-    {
-      "imports": {
-        "esptool-js": "https://unpkg.com/esptool-js@0.5.4/bundle.js"
-      }
-    }
+    { "imports": { "esptool-js": "https://unpkg.com/esptool-js@0.5.4/bundle.js" } }
   </script>
 
   <script type="module">
@@ -530,42 +237,28 @@
       const ua = navigator.userAgent || navigator.vendor || window.opera;
       return /android|iphone|ipad|ipod/i.test(ua);
     }
+    if (isMobileOS()) { document.body.classList.add('is-mobile'); }
 
-    if (isMobileOS()) {
-      document.body.classList.add('is-mobile');
-    }
-
-    function createButton(text, id, className = 'btn') {
+    function createButton(text, id) {
       const btn = document.createElement('button');
-      btn.className = className;
-      btn.id = id;
-      btn.textContent = text;
+      btn.className = 'btn'; btn.id = id; btn.textContent = text;
       return btn;
     }
 
     function renderButtons() {
       actionsContainer.innerHTML = '';
       if (isFlashing) {
-        const wrapper = document.createElement('div');
-        wrapper.style.width = '100%';
+        const wrapper = document.createElement('div'); wrapper.style.width = '100%';
         const progressBar = document.createElement('div');
-        progressBar.className = 'progress-bar';
-        progressBar.id = 'progressBar';
-        progressBar.style.display = 'flex';
+        progressBar.className = 'progress-bar'; progressBar.id = 'progressBar'; progressBar.style.display = 'flex';
         const fill = document.createElement('div');
-        fill.className = 'progress-fill';
-        fill.id = 'progressFill';
-        fill.style.width = progress + '%';
+        fill.className = 'progress-fill'; fill.id = 'progressFill'; fill.style.width = progress + '%';
         const label = document.createElement('span');
-        label.className = 'progress-label';
-        label.id = 'progressLabel';
-        label.textContent = progress + '%';
-        progressBar.appendChild(fill);
-        progressBar.appendChild(label);
+        label.className = 'progress-label'; label.id = 'progressLabel'; label.textContent = progress + '%';
+        progressBar.appendChild(fill); progressBar.appendChild(label);
         wrapper.appendChild(progressBar);
         statusTextEl = document.createElement('div');
-        statusTextEl.className = 'status-text';
-        statusTextEl.id = 'statusText';
+        statusTextEl.className = 'status-text'; statusTextEl.id = 'statusText';
         wrapper.appendChild(statusTextEl);
         actionsContainer.appendChild(wrapper);
       } else if (port) {
@@ -573,10 +266,6 @@
         const keyBtn = createButton('Key', 'keyBtn');
         installBtn.addEventListener('click', onInstallClick);
         keyBtn.addEventListener('click', onKeyClick);
-        const portInfoSpan = document.createElement('span');
-        portInfoSpan.className = 'port-info';
-        portInfoSpan.textContent = portName;
-        actionsContainer.appendChild(portInfoSpan);
         actionsContainer.appendChild(installBtn);
         actionsContainer.appendChild(keyBtn);
       } else {
@@ -592,100 +281,66 @@
       if (fill) fill.style.width = progress + '%';
       if (label) label.textContent = progress + '%';
     }
-
-    function setStatusText(text) {
-      if (statusTextEl) statusTextEl.textContent = text;
-    }
+    function setStatusText(text) { if (statusTextEl) statusTextEl.textContent = text; }
 
     function onInstallClick() {
       if (isFlashing) return;
       const savedKey = localStorage.getItem('lexikon_key');
       if (!savedKey || !isValidKey(savedKey)) {
         const keyBtn = document.getElementById('keyBtn');
-        if (keyBtn) {
-          keyBtn.classList.add('key-flash');
-          setTimeout(() => keyBtn.classList.remove('key-flash'), 2000);
-        }
+        if (keyBtn) { keyBtn.classList.add('key-flash'); setTimeout(() => keyBtn.classList.remove('key-flash'), 2000); }
         return;
       }
       confirmModal.classList.add('active');
     }
-
-    function onKeyClick() {
-      openKeyModal();
-    }
+    function onKeyClick() { openKeyModal(); }
 
     function openKeyModal() {
       const savedKey = localStorage.getItem('lexikon_key');
-      if (savedKey) {
-        keyInput.value = savedKey;
-      } else {
-        keyInput.value = '';
-      }
+      keyInput.value = savedKey || '';
       keyError.style.display = 'none';
       keyModal.classList.add('active');
     }
-
-    function closeKeyModal() {
-      keyModal.classList.remove('active');
-    }
-
-    function closeConfirmModal() {
-      confirmModal.classList.remove('active');
-    }
+    function closeKeyModal() { keyModal.classList.remove('active'); }
+    function closeConfirmModal() { confirmModal.classList.remove('active'); }
 
     function showDisconnectModal() {
       disconnectMessage.textContent = `Connection to ${portName} was lost. Check power, cable, and port. Try reconnecting the device.`;
       disconnectModal.classList.add('active');
     }
-
-    function hideDisconnectModal() {
-      disconnectModal.classList.remove('active');
-    }
+    function hideDisconnectModal() { disconnectModal.classList.remove('active'); }
 
     async function handleDisconnect() {
-      if (port) {
-        try { await port.close(); } catch (e) {}
-        port = null;
-      }
-      isFlashing = false;
-      progress = 0;
-      showDisconnectModal();
-      renderButtons();
+      if (port) { try { await port.close(); } catch(e){} }
+      port = null; isFlashing = false; progress = 0;
+      showDisconnectModal(); renderButtons();
     }
 
     async function toggleConnection() {
       if (isFlashing) return;
       if (port) {
-        try { await port.close(); } catch (e) {}
-        port = null;
-        renderButtons();
-        return;
+        try { await port.close(); } catch(e){}
+        port = null; renderButtons(); return;
       }
       try {
-        const newPort = await navigator.serial.requestPort();
-        await newPort.open({ baudRate: 115200 });
-        port = newPort;
+        const requestedPort = await navigator.serial.requestPort();
+        await requestedPort.open({ baudRate: 115200 });
+        port = requestedPort;
         const info = port.getInfo();
         portName = info.productName || `USB Device (${info.usbVendorId?.toString(16)}:${info.usbProductId?.toString(16)})`;
         port.ondisconnect = handleDisconnect;
         renderButtons();
       } catch (err) {
-        port = null;
-        renderButtons();
+        port = null; renderButtons();
       }
     }
 
-    function isValidKey(key) {
-      return key.startsWith('gsk_') && key.length > 40;
-    }
+    function isValidKey(key) { return key.startsWith('gsk_') && key.length > 40; }
 
     function uint8ToBinaryString(u8) {
       let result = '';
-      const chunkSize = 0x8000;
-      for (let i = 0; i < u8.length; i += chunkSize) {
-        const chunk = u8.subarray(i, i + chunkSize);
-        result += String.fromCharCode.apply(null, chunk);
+      for (let i = 0; i < u8.length; i += 0x8000) {
+        result += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
       }
       return result;
     }
@@ -695,20 +350,12 @@
       const savedKey = localStorage.getItem('lexikon_key');
       if (!savedKey || !isValidKey(savedKey)) return;
 
-      isFlashing = true;
-      progress = 0;
-      renderButtons();
-      updateProgressUI();
-      setStatusText('Initializing...');
-
-      let transport = null;
-      let esptool = null;
+      isFlashing = true; progress = 0; renderButtons(); updateProgressUI(); setStatusText('Initializing...');
+      let transport = null; let esptool = null;
 
       try {
         const [bootResp, partResp, appResp] = await Promise.all([
-          fetch('bootloader.bin'),
-          fetch('partitions.bin'),
-          fetch('Lexikon.bin')
+          fetch('bootloader.bin'), fetch('partitions.bin'), fetch('Lexikon.bin')
         ]);
         if (!bootResp.ok) throw new Error('bootloader.bin not found');
         if (!partResp.ok) throw new Error('partitions.bin not found');
@@ -721,67 +368,41 @@
         setStatusText('Connecting to ESP32...');
         transport = new Transport(port);
         esptool = new ESPLoader({
-          transport: transport,
-          baudrate: 921600,
+          transport, baudrate: 921600,
           terminal: {
             clean: () => {},
             writeLine: (msg) => {
               console.log(msg);
               if (typeof msg === 'string') {
                 const match = msg.match(/\((\d+)\s*%\)/);
-                if (match) {
-                  const p = parseInt(match[1], 10);
-                  if (!isNaN(p) && p >= 0 && p <= 100) {
-                    progress = p;
-                    updateProgressUI();
-                  }
-                }
+                if (match) { progress = parseInt(match[1],10); updateProgressUI(); }
               }
             },
-            write: (msg) => {
-              console.log(msg);
-            }
+            write: (msg) => console.log(msg)
           }
         });
-
         await esptool.main();
-        setStatusText('Erasing flash...');
-        await esptool.eraseFlash();
+        setStatusText('Erasing flash...'); await esptool.eraseFlash();
 
         const fileArray = [];
-        if (bootloaderData.length > 0) {
-          fileArray.push({ data: uint8ToBinaryString(bootloaderData), address: 0x1000 });
-        }
-        if (partitionsData.length > 0) {
-          fileArray.push({ data: uint8ToBinaryString(partitionsData), address: 0x8000 });
-        }
+        if (bootloaderData.length) fileArray.push({ data: uint8ToBinaryString(bootloaderData), address: 0x1000 });
+        if (partitionsData.length) fileArray.push({ data: uint8ToBinaryString(partitionsData), address: 0x8000 });
         fileArray.push({ data: uint8ToBinaryString(appData), address: 0x10000 });
 
         setStatusText('Writing firmware...');
-        await esptool.writeFlash({
-          fileArray: fileArray,
-          flashSize: "keep",
-          compress: true,
-          eraseAll: false
-        });
-
-        progress = 100;
-        updateProgressUI();
+        await esptool.writeFlash({ fileArray, flashSize: "keep", compress: true, eraseAll: false });
+        progress = 100; updateProgressUI();
         setStatusText('Flashing complete. Rebooting...');
         await hardResetDevice(transport);
         await esptool.after();
         setStatusText('Done. Device should now run Lexikon OS.');
       } catch (e) {
-        console.error(e);
-        setStatusText('Error: ' + e.message);
-        progress = 0;
-        updateProgressUI();
+        console.error(e); setStatusText('Error: ' + e.message);
+        progress = 0; updateProgressUI();
       } finally {
         isFlashing = false;
-        setTimeout(() => {
-          if (port) renderButtons();
-          else handleDisconnect();
-        }, 1500);
+        if (transport) { try { await transport.disconnect(); } catch(e){} }
+        setTimeout(() => { renderButtons(); }, 1500);
       }
     }
 
@@ -794,98 +415,40 @@
           await new Promise(r => setTimeout(r, 50));
           await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
           await new Promise(r => setTimeout(r, 100));
-        } catch (e) {
-          console.warn('Reset failed:', e);
-        }
+        } catch(e) { console.warn('Reset failed:', e); }
       }
     }
 
     continueBtn.addEventListener('click', () => {
       const key = keyInput.value.trim();
-      if (!key) {
-        keyError.textContent = 'Key is required';
-        keyError.style.display = 'block';
-        return;
-      }
-      if (!isValidKey(key)) {
-        keyError.textContent = 'Invalid key format';
-        keyError.style.display = 'block';
-        return;
-      }
+      if (!key) { keyError.textContent = 'Key is required'; keyError.style.display = 'block'; return; }
+      if (!isValidKey(key)) { keyError.textContent = 'Invalid key format'; keyError.style.display = 'block'; return; }
       localStorage.setItem('lexikon_key', key);
-      closeKeyModal();
-      renderButtons();
+      closeKeyModal(); renderButtons();
     });
-
-    getKeyBtn.addEventListener('click', () => {
-      window.open('https://example.com/get-key', '_blank');
-    });
-
-    keyModal.addEventListener('click', (e) => {
-      if (e.target === keyModal) closeKeyModal();
-    });
-
+    getKeyBtn.addEventListener('click', () => window.open('https://example.com/get-key', '_blank'));
+    keyModal.addEventListener('click', (e) => { if (e.target === keyModal) closeKeyModal(); });
     confirmCancelBtn.addEventListener('click', closeConfirmModal);
-    confirmContinueBtn.addEventListener('click', () => {
-      closeConfirmModal();
-      startFlash();
-    });
-
-    disconnectConnectBtn.addEventListener('click', () => {
-      hideDisconnectModal();
-      renderButtons();
-    });
-
-    confirmModal.addEventListener('click', (e) => {
-      if (e.target === confirmModal) closeConfirmModal();
-    });
-
-    disconnectModal.addEventListener('click', (e) => {
-      if (e.target === disconnectModal) hideDisconnectModal();
-    });
-
-    keyInput.addEventListener('input', () => {
-      if (keyInput.value.trim()) {
-        keyError.style.display = 'none';
-      }
-    });
+    confirmContinueBtn.addEventListener('click', () => { closeConfirmModal(); startFlash(); });
+    disconnectConnectBtn.addEventListener('click', () => { hideDisconnectModal(); renderButtons(); });
+    confirmModal.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirmModal(); });
+    disconnectModal.addEventListener('click', (e) => { if (e.target === disconnectModal) hideDisconnectModal(); });
+    keyInput.addEventListener('input', () => { if (keyInput.value.trim()) keyError.style.display = 'none'; });
 
     async function loadAboutText() {
       try {
         const response = await fetch('About.txt');
         if (!response.ok) throw new Error('Not found');
-        const text = await response.text();
-        aboutBlock.textContent = text;
-      } catch (e) {
+        aboutBlock.textContent = await response.text();
+      } catch(e) {
         aboutBlock.textContent = 'Lexikon OS is a minimalistic operating system for ESP32 microcontrollers.';
       } finally {
-        setTimeout(() => {
-          preloader.classList.add('fade-out');
-          mainContainer.style.opacity = '1';
-          setTimeout(() => {
-            preloader.style.display = 'none';
-          }, 500);
-        }, 400);
+        setTimeout(() => { preloader.classList.add('fade-out'); mainContainer.style.opacity = '1'; setTimeout(() => { preloader.style.display = 'none'; }, 500); }, 400);
       }
     }
-
-    window.addEventListener('load', () => {
-      if (!isMobileOS()) {
-        loadAboutText();
-      }
-    });
-
-    if (!('serial' in navigator)) {
-      const connectBtn = document.getElementById('connectBtn');
-      if (connectBtn) {
-        connectBtn.disabled = true;
-        connectBtn.textContent = 'Unavailable';
-      }
-    }
-
-    if (!isMobileOS()) {
-      renderButtons();
-    }
+    window.addEventListener('load', () => { if (!isMobileOS()) loadAboutText(); });
+    if (!('serial' in navigator)) { const btn = document.getElementById('connectBtn'); if(btn) { btn.disabled = true; btn.textContent = 'Unavailable'; } }
+    if (!isMobileOS()) renderButtons();
   </script>
 </body>
 </html>
