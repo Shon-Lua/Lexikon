@@ -135,7 +135,6 @@
     .mobile-message p { font-size:0.9rem; line-height:1.6; max-width:300px; color:#ccc; letter-spacing:0.03rem; }
     body.is-mobile .main-container, body.is-mobile .preloader, body.is-mobile .modal-overlay { display:none!important; }
     body.is-mobile .mobile-message { display:flex; }
-    .status-text { font-size:0.7rem; color:#aaa; margin-top:0.4rem; text-align:center; min-height:1.2rem; }
   </style>
 </head>
 <body>
@@ -231,7 +230,6 @@
     let isFlashing = false;
     let progress = 0;
     let portName = 'Unknown device';
-    let statusTextEl = null;
 
     function isMobileOS() {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -257,9 +255,6 @@
         label.className = 'progress-label'; label.id = 'progressLabel'; label.textContent = progress + '%';
         progressBar.appendChild(fill); progressBar.appendChild(label);
         wrapper.appendChild(progressBar);
-        statusTextEl = document.createElement('div');
-        statusTextEl.className = 'status-text'; statusTextEl.id = 'statusText';
-        wrapper.appendChild(statusTextEl);
         actionsContainer.appendChild(wrapper);
       } else if (port) {
         const installBtn = createButton('Install', 'installBtn');
@@ -281,7 +276,6 @@
       if (fill) fill.style.width = progress + '%';
       if (label) label.textContent = progress + '%';
     }
-    function setStatusText(text) { if (statusTextEl) statusTextEl.textContent = text; }
 
     function onInstallClick() {
       if (isFlashing) return;
@@ -345,8 +339,22 @@
       return result;
     }
 
+    async function enterBootloader(transport) {
+      if (transport && typeof transport.setSignals === 'function') {
+        try {
+          await transport.setSignals({ dataTerminalReady: false, requestToSend: true });
+          await new Promise(r => setTimeout(r, 100));
+          await transport.setSignals({ dataTerminalReady: true, requestToSend: false });
+          await new Promise(r => setTimeout(r, 50));
+          await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
+          await new Promise(r => setTimeout(r, 100));
+        } catch(e) {
+          console.warn('Bootloader entry failed:', e);
+        }
+      }
+    }
+
     async function hardResetDevice(transport) {
-      setStatusText('Attempting hardware reset...');
       if (transport && typeof transport.setSignals === 'function') {
         try {
           await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
@@ -355,12 +363,9 @@
           await new Promise(r => setTimeout(r, 50));
           await transport.setSignals({ dataTerminalReady: false, requestToSend: false });
           await new Promise(r => setTimeout(r, 100));
-          setStatusText('Reset sequence completed.');
         } catch(e) {
-          setStatusText('Reset failed: ' + e.message);
+          console.warn('Reset failed:', e);
         }
-      } else {
-        setStatusText('Signal control not supported. Please reset manually.');
       }
     }
 
@@ -369,7 +374,7 @@
       const savedKey = localStorage.getItem('lexikon_key');
       if (!savedKey || !isValidKey(savedKey)) return;
 
-      isFlashing = true; progress = 0; renderButtons(); updateProgressUI(); setStatusText('Initializing...');
+      isFlashing = true; progress = 0; renderButtons(); updateProgressUI();
       let transport = null; let esptool = null;
 
       try {
@@ -384,49 +389,37 @@
         const partitionsData = new Uint8Array(await partResp.arrayBuffer());
         const appData = new Uint8Array(await appResp.arrayBuffer());
 
-        setStatusText('Connecting to ESP32...');
         transport = new Transport(port);
+        await enterBootloader(transport);
+
         esptool = new ESPLoader({
           transport, baudrate: 921600,
           terminal: {
             clean: () => {},
             writeLine: (msg) => {
-              const text = String(msg !== undefined ? msg : "");
-              const match = text.match(/\((\d+)\s*%\)/);
-              if (match) {
-                progress = parseInt(match[1], 10);
-                updateProgressUI();
-              }
-              setStatusText(text);
+              const match = String(msg).match(/\((\d+)\s*%\)/);
+              if (match) { progress = parseInt(match[1],10); updateProgressUI(); }
             },
             write: (msg) => {
-              const text = String(msg !== undefined ? msg : "");
-              const match = text.match(/\((\d+)\s*%\)/);
-              if (match) {
-                progress = parseInt(match[1], 10);
-                updateProgressUI();
-              }
-              setStatusText(text);
+              const match = String(msg).match(/\((\d+)\s*%\)/);
+              if (match) { progress = parseInt(match[1],10); updateProgressUI(); }
             }
           }
         });
         await esptool.main();
-        setStatusText('Erasing flash...'); await esptool.eraseFlash();
+        await esptool.eraseFlash();
 
         const fileArray = [];
         if (bootloaderData.length) fileArray.push({ data: uint8ToBinaryString(bootloaderData), address: 0x1000 });
         if (partitionsData.length) fileArray.push({ data: uint8ToBinaryString(partitionsData), address: 0x8000 });
         fileArray.push({ data: uint8ToBinaryString(appData), address: 0x10000 });
 
-        setStatusText('Writing firmware...');
         await esptool.writeFlash({ fileArray, flashSize: "keep", compress: true, eraseAll: false });
         progress = 100; updateProgressUI();
-        setStatusText('Flashing complete. Rebooting...');
         await hardResetDevice(transport);
         await esptool.after();
-        setStatusText('Done. Device should now run Lexikon OS.');
       } catch (e) {
-        console.error(e); setStatusText('Error: ' + e.message);
+        console.error(e);
         progress = 0; updateProgressUI();
       } finally {
         isFlashing = false;
